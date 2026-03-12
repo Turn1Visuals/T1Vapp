@@ -26,7 +26,14 @@ Built with [Electron](https://www.electronjs.org/) — meaning it runs as a nati
 - Pinned tabs (set in Settings) and temporary tabs (added via the + button in the sidebar)
 
 ### Media tab
-- Placeholder — video upload workflow will be built here (YouTube, TikTok, etc.)
+- **Video picker** — select a video file from your computer for upload
+- **JSON picker** — load session metadata from a Multiviewer export to auto-fill title/description
+- **Title, hashtags, description** fields — editable before posting
+- **Platform selector** — choose YouTube and/or TikTok per upload
+- **YouTube options** — visibility (public/unlisted/private) and category
+- **TikTok options** — visibility setting
+- **Upload button** — posts to all selected platforms in one click
+- **Upload status** — live feedback per platform (success/fail)
 
 ### Settings tab
 - Configure OBS WebSocket connection (host, port, password)
