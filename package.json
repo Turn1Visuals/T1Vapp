@@ -1,0 +1,40 @@
+{
+  "name": "t1v-app",
+  "version": "1.0.0",
+  "description": "T1V central dashboard for F1 content workflow",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node launch.js",
+    "build": "electron-builder --win --x64"
+  },
+  "keywords": [],
+  "author": "TURN1VISUALS",
+  "license": "ISC",
+  "build": {
+    "appId": "com.turn1visuals.t1v-app",
+    "productName": "T1V",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "assets/icon.png"
+    },
+    "files": [
+      "src/**/*",
+      "launch.js",
+      "package.json"
+    ],
+    "extraResources": []
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^26.8.1"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "obs-websocket-js": "^5.0.7",
+    "simple-icons": "^16.11.0"
+  }
+}

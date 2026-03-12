@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.claude/
+tiktok-test.js
+src/test.js
+src/main.js.bak

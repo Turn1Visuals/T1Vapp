@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; media-src 'self' file:;" />
+  <title>T1V</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Title bar -->
+  <div id="titlebar">
+    <span id="titlebar-title">T1V</span>
+    <div id="titlebar-controls">
+      <button id="btn-minimize">─</button>
+      <button id="btn-maximize">□</button>
+      <button id="btn-close">✕</button>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div id="tabbar">
+    <button class="tab active" data-tab="home">Home</button>
+    <button class="tab" data-tab="media">Media</button>
+    <button class="tab" data-tab="browser">Browser</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- Main layout: panels + persistent browser sidebar -->
+  <div id="main-layout">
+
+    <!-- Persistent launcher sidebar (always visible on the left) -->
+    <div id="launcher-sidebar">
+      <div id="launcher-grid" class="launcher-grid">
+        <div id="btn-add-launcher" class="launcher-tile launcher-add-tile">
+          <span class="tile-icon">+</span>
+          <span class="tile-name">Add</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab panels -->
+    <div id="content">
+
+      <!-- HOME TAB -->
+      <div id="tab-home" class="panel active">
+        <div class="home-setup">
+          <div class="setup-block">
+            <span class="setup-block-label">Stream</span>
+            <input id="stream-title-input" type="text" class="setup-input" placeholder="Title…" />
+            <div class="setup-row">
+              <button id="btn-go-live" class="btn-obs btn-start">Go Live</button>
+              <button id="btn-end-stream" class="btn-obs btn-stop">End Stream</button>
+              <span id="golive-status" class="obs-status"></span>
+            </div>
+          </div>
+          <div class="setup-block">
+            <span class="setup-block-label">YouTube</span>
+            <textarea id="stream-desc-input" class="setup-input setup-desc" placeholder="Description…"></textarea>
+          </div>
+          <div class="setup-block">
+            <span class="setup-block-label">Twitch</span>
+            <input id="twitch-category-input" type="text" class="setup-input" placeholder="Category…" />
+            <input id="twitch-tags-input" type="text" class="setup-input" placeholder="Tags, comma separated…" />
+          </div>
+        </div>
+        <div class="home-streams">
+
+          <!-- Left: stream viewer with tabs -->
+          <div class="stream-col">
+            <div class="stream-tab-bar">
+              <button class="stream-tab active" data-view="overlay">Stream</button>
+              <button class="stream-tab" data-view="youtube">YouTube</button>
+              <button class="stream-tab" data-view="twitch">Twitch</button>
+            </div>
+            <div class="stream-views-wrap">
+              <div id="stream-view-overlay" class="stream-view active">
+                <div id="overlay-viewport">
+                  <webview id="overlay-webview" partition="persist:overlay" allowpopups></webview>
+                </div>
+                <div id="overlay-offline" class="stream-offline">Waiting for stream source…</div>
+              </div>
+              <div id="stream-view-youtube" class="stream-view">
+                <webview id="yt-stream-wv" class="stream-webview" partition="persist:yt-stream" allowpopups></webview>
+                <div id="yt-stream-offline" class="stream-offline" style="display:none">No YouTube channel configured</div>
+              </div>
+              <div id="stream-view-twitch" class="stream-view">
+                <webview id="twitch-stream-wv" class="stream-webview" partition="persist:twitch-stream" allowpopups></webview>
+                <div id="twitch-stream-offline" class="stream-offline" style="display:none">No Twitch channel configured</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chats area: YouTube + Twitch + shared send bar -->
+          <div class="chats-area">
+          <!-- Shared send bar -->
+          <div class="chat-send-bar">
+            <input id="chat-msg-input" class="chat-msg-input" type="text" placeholder="Send to chat…" />
+            <button id="btn-send-yt" class="btn-ghost" title="Send to YouTube">YT</button>
+            <button id="btn-send-twitch" class="btn-ghost" title="Send to Twitch">TW</button>
+            <button id="btn-send-both" class="btn-secondary">Send Both</button>
+            <span id="chat-send-status" class="muted"></span>
+          </div>
+            <div class="chat-cols-row">
+
+              <!-- YouTube Chat -->
+              <div class="chat-col">
+                <div class="chat-col-header">
+                  <span>YouTube Chat</span>
+                  <button id="btn-load-yt-chat" class="btn-ghost" title="Load / Refresh chat">↻</button>
+                </div>
+                <webview id="yt-chat-wv" class="chat-webview" partition="persist:yt-chat" allowpopups></webview>
+              </div>
+
+              <!-- Twitch Chat -->
+              <div class="chat-col">
+                <div class="chat-col-header">
+                  <span>Twitch Chat</span>
+                </div>
+                <webview id="twitch-chat-wv" class="chat-webview" partition="persist:twitch-chat" allowpopups></webview>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MEDIA TAB -->
+      <div id="tab-media" class="panel">
+        <div class="panel-header"><h2>Media Upload</h2></div>
+
+        <div class="media-body">
+
+          <!-- Left: video player -->
+          <div class="media-left">
+            <div class="media-picker-block">
+              <button id="btn-pick-video" class="btn-secondary">Select Video</button>
+              <span id="video-filename" class="media-filename muted">No file selected</span>
+            </div>
+            <div id="video-preview-wrap" class="video-preview-wrap" style="display:none">
+              <video id="media-video" class="media-video" controls></video>
+            </div>
+            <div id="video-placeholder" class="video-placeholder">
+              <span>No video selected</span>
+            </div>
+          </div>
+
+          <!-- Right: content fields -->
+          <div class="media-right">
+            <div class="media-picker-block">
+              <button id="btn-pick-json" class="btn-secondary">Load Session Data</button>
+              <span id="json-filename" class="media-filename muted">No file selected</span>
+              <button id="btn-clear-json" class="btn-ghost" style="display:none" title="Clear">✕</button>
+            </div>
+
+            <div class="media-fields">
+              <label class="media-label">
+                Title
+                <input id="media-title" type="text" class="media-input" placeholder="Video title…" />
+              </label>
+              <label class="media-label">
+                Hashtags
+                <input id="media-hashtags" type="text" class="media-input" placeholder="#f1 #formula1 #turn1visuals" />
+              </label>
+              <label class="media-label">
+                Description
+                <textarea id="media-description" class="media-textarea" placeholder="Description…"></textarea>
+              </label>
+            </div>
+
+          </div>
+
+          <!-- Post to + Upload + Results column -->
+          <div class="media-results" id="media-results">
+            <span class="media-platforms-label">Post to:</span>
+            <div class="platform-group">
+              <label class="platform-check"><input type="checkbox" id="plat-youtube" /> YouTube</label>
+              <div class="platform-opts">
+                <div class="platform-opt-row">
+                  <span class="media-platforms-label">Visibility</span>
+                  <select id="yt-visibility" class="media-select">
+                    <option value="private">Private</option>
+                    <option value="unlisted">Unlisted</option>
+                    <option value="public">Public</option>
+                  </select>
+                </div>
+                <div class="platform-opt-row">
+                  <span class="media-platforms-label">Category</span>
+                  <select id="yt-category" class="media-select">
+                    <option value="17">Sports</option>
+                    <option value="20">Gaming</option>
+                    <option value="25">News & Politics</option>
+                    <option value="24">Entertainment</option>
+                    <option value="22">People & Blogs</option>
+                    <option value="28">Science & Technology</option>
+                    <option value="27">Education</option>
+                    <option value="10">Music</option>
+                    <option value="2">Autos & Vehicles</option>
+                    <option value="1">Film & Animation</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="platform-group">
+              <label class="platform-check"><input type="checkbox" id="plat-tiktok" /> TikTok</label>
+              <div class="platform-opts">
+                <div class="platform-opt-row">
+                  <span class="media-platforms-label">Visibility</span>
+                  <select id="tt-visibility" class="media-select">
+                    <option value="PUBLIC_TO_EVERYONE">Public</option>
+                    <option value="MUTUAL_FOLLOW_FRIENDS">Friends</option>
+                    <option value="SELF_ONLY">Private</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="media-upload-row">
+              <button id="btn-upload" class="btn-primary" disabled>Upload</button>
+              <span id="upload-status" class="muted"></span>
+            </div>
+            <div class="results-divider"></div>
+            <div class="results-empty muted" id="results-empty">Upload results will appear here</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- BROWSER TAB -->
+      <div id="tab-browser" class="panel">
+        <div id="browser-addressbar">
+          <button id="browser-back" title="Back">‹</button>
+          <button id="browser-forward" title="Forward">›</button>
+          <button id="browser-reload" title="Reload">↺</button>
+          <input id="browser-url-input" type="text" placeholder="Enter URL and press Enter…" />
+          <button id="browser-url-go">↵</button>
+          <div class="zoom-controls">
+            <button id="browser-zoom-out" title="Zoom out (Ctrl+−)">−</button>
+            <span id="browser-zoom-label">100%</span>
+            <button id="browser-zoom-in" title="Zoom in (Ctrl++)">+</button>
+          </div>
+          <button id="browser-open-edge" title="Open in Edge">&#x2197;</button>
+          <button id="browser-devtools" title="DevTools (Ctrl+Shift+I)">⚙</button>
+        </div>
+        <div id="browser-views">
+          <div id="browser-empty" class="browser-empty">
+            No tabs yet. Enter a URL above or click "+" in the sidebar.
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="tab-settings" class="panel">
+        <div class="panel-header"><h2>Settings</h2></div>
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h3>OBS WebSocket</h3>
+            <label>Host <input id="obs-host" type="text" placeholder="localhost" /></label>
+            <label>Port <input id="obs-port" type="number" placeholder="4455" /></label>
+            <label>Password <input id="obs-password" type="password" placeholder="(none)" /></label>
+            <button id="btn-save-obs" class="btn-primary">Save OBS Settings</button>
+          </div>
+          <div class="settings-section">
+            <h3>Overlay Preview</h3>
+            <label>URL <input id="overlay-url-input" type="text" placeholder="http://localhost:5173/" /></label>
+            <button id="btn-save-overlay" class="btn-secondary">Edit Overlay URL</button>
+          </div>
+          <div class="settings-section">
+            <h3>YouTube</h3>
+            <label>Client ID <input id="yt-client-id" type="text" placeholder="…apps.googleusercontent.com" /></label>
+            <label>Client Secret <input id="yt-client-secret" type="password" placeholder="GOCSPX-…" /></label>
+            <label>Channel ID <input id="yt-channel-id" type="text" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-yt-save" class="btn-primary">Save</button>
+              <button id="btn-yt-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="yt-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>TikTok</h3>
+            <label>Client Key <input id="tt-client-key" type="text" placeholder="sbawdq…" /></label>
+            <label>Client Secret <input id="tt-client-secret" type="password" placeholder="sRqmJs…" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-tt-save" class="btn-primary">Save</button>
+              <button id="btn-tt-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="tt-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Twitch</h3>
+            <label>Channel Name <input id="twitch-channel" type="text" placeholder="turn1visuals" /></label>
+            <label>Client ID <input id="twitch-client-id" type="text" placeholder="Twitch app client ID" /></label>
+            <label>Client Secret <input id="twitch-client-secret" type="password" placeholder="Twitch app client secret" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-twitch-save" class="btn-primary">Save</button>
+              <button id="btn-twitch-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="twitch-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section settings-section--wide">
+            <h3>Browser Tabs</h3>
+            <p class="muted" style="margin-bottom:8px">Pinned tabs always show in the sidebar. Click the icon square to pick a brand icon. Drag rows to reorder. Right-click any tab in the sidebar for options.</p>
+            <div id="browser-tab-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Persistent browser sidebar (always visible on the right) -->
+
+    <div id="browser-sidebar">
+      <div id="sidebar-tabs">
+        <!-- icon buttons injected by JS -->
+      </div>
+      <button id="btn-sidebar-add" title="Add temporary tab">+</button>
+    </div>
+
+  </div>
+
+  <!-- Browser context menu -->
+  <div id="browser-ctx-menu" class="ctx-menu">
+    <button data-action="home">↩ Home URL</button>
+    <button data-action="reload">↺ Reload</button>
+    <button data-action="copy-url">⧉ Copy URL</button>
+    <button data-action="devtools">⚙ DevTools</button>
+    <div class="ctx-sep"></div>
+    <button data-action="close" class="ctx-danger">✕ Close tab</button>
+  </div>
+
+  <!-- Hidden file input for launcher adding -->
+  <input type="file" id="launcher-file-input" style="display:none" />
+
+  <script src="app.js"></script>
+</body>
+</html>
