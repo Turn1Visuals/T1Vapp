@@ -72,6 +72,7 @@
               <button class="stream-tab active" data-view="overlay">Stream</button>
               <button class="stream-tab" data-view="youtube">YouTube</button>
               <button class="stream-tab" data-view="twitch">Twitch</button>
+              <button class="stream-tab" data-view="twitter">Twitter/X</button>
             </div>
             <div class="stream-views-wrap">
               <div id="stream-view-overlay" class="stream-view active">
@@ -87,6 +88,9 @@
               <div id="stream-view-twitch" class="stream-view">
                 <webview id="twitch-stream-wv" class="stream-webview" partition="persist:twitch-stream" allowpopups></webview>
                 <div id="twitch-stream-offline" class="stream-offline" style="display:none">No Twitch channel configured</div>
+              </div>
+              <div id="stream-view-twitter" class="stream-view">
+                <webview id="twitter-stream-wv" class="stream-webview" partition="persist:twitter-stream" allowpopups></webview>
               </div>
             </div>
           </div>

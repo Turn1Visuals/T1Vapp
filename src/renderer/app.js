@@ -642,10 +642,22 @@ function initHomeStreams() {
   const views = {
     overlay: document.getElementById('stream-view-overlay'),
     youtube: document.getElementById('stream-view-youtube'),
-    twitch:  document.getElementById('stream-view-twitch')
+    twitch:  document.getElementById('stream-view-twitch'),
+    twitter: document.getElementById('stream-view-twitter')
   }
 
+  const streamTabIcons = { youtube: 'youtube', twitch: 'twitch', twitter: 'x' }
   tabs.forEach(tab => {
+    const slug = streamTabIcons[tab.dataset.view]
+    if (slug) {
+      window.api.icons.get(slug).then(data => {
+        if (!data) return
+        const svg = document.createElement('span')
+        svg.innerHTML = data.svg
+        const s = svg.querySelector('svg')
+        if (s) { s.classList.add('si-icon-sm'); tab.prepend(s) }
+      })
+    }
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'))
       tab.classList.add('active')
@@ -653,6 +665,7 @@ function initHomeStreams() {
       Object.entries(views).forEach(([k, v]) => v.classList.toggle('active', k === target))
       if (target === 'youtube') loadYtStream()
       if (target === 'twitch')  loadTwitchStream()
+      if (target === 'twitter') loadTwitterStream()
     })
   })
 
@@ -722,6 +735,16 @@ function initHomeStreams() {
     if (!channel) { twitchStreamOffline.style.display = ''; return }
     twitchStreamWv.src = `https://dashboard.twitch.tv/u/${channel}/stream-manager`
     twitchStreamLoaded = true
+  }
+
+  // ── Twitter/X stream tab ──
+  const twitterStreamWv = document.getElementById('twitter-stream-wv')
+  let twitterStreamLoaded = false
+
+  function loadTwitterStream() {
+    if (twitterStreamLoaded) return
+    twitterStreamWv.src = 'https://studio.x.com/producer'
+    twitterStreamLoaded = true
   }
 
   // ── YouTube chat ──

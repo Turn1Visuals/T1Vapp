@@ -5,6 +5,8 @@ const http = require('http')
 const { exec, spawn } = require('child_process')
 const OBSWebSocket = require('obs-websocket-js').default
 
+app.setAppUserModelId('com.turn1visuals.t1v-app')
+
 const obs = new OBSWebSocket()
 let obsConnected = false
 
@@ -376,7 +378,7 @@ ipcMain.handle('youtube:upload', async (_, { filePath, title, description, tags,
 })
 
 // ── TikTok OAuth + Upload ─────────────────────────────────────────────────────
-const TIKTOK_REDIRECT_URI  = 'https://turn1visuals.com/tiktok-callback'
+const TIKTOK_REDIRECT_URI  = 'https://turn1visuals.com/t1v-app/tiktok-callback'
 const TIKTOK_LOCAL_PORT    = 8986
 
 ipcMain.handle('tiktok:auth', (_, clientKey, clientSecret) => {
