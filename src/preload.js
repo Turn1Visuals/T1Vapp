@@ -91,6 +91,8 @@ contextBridge.exposeInMainWorld('api', {
     importGoogleSession: () => ipcRenderer.invoke('browser:importGoogleSession'),
     siteLogin:           (url) => ipcRenderer.invoke('browser:siteLogin', url),
     finishSiteLogin:     (partition) => ipcRenderer.invoke('browser:finishSiteLogin', partition),
+    checkCookies:        (partition, domain) => ipcRenderer.invoke('browser:checkCookies', partition, domain),
+    injectCookie:        (partition, domain, name, value) => ipcRenderer.invoke('browser:injectCookie', partition, domain, name, value),
   },
   kick: {
     auth:          (clientId, clientSecret) => ipcRenderer.invoke('kick:auth', clientId, clientSecret),

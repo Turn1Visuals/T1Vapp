@@ -139,15 +139,16 @@
                         <div class="chat-col-header">
                           <span>YouTube Chat</span>
                           <button id="btn-load-yt-chat" class="btn-ghost" title="Load / Refresh chat">↻</button>
+                          <button id="btn-yt-chat-login" class="btn-ghost" title="Log in to YouTube">Login</button>
                         </div>
                         <webview id="yt-chat-wv" class="chat-webview" partition="persist:yt-chat" allowpopups></webview>
                       </div>
                       <div class="chat-col">
-                        <div class="chat-col-header"><span>Twitch Chat</span><button id="btn-reload-twitch-chat" class="btn-ghost" title="Reload chat">↻</button></div>
+                        <div class="chat-col-header"><span>Twitch Chat</span><button id="btn-reload-twitch-chat" class="btn-ghost" title="Reload chat">↻</button><button id="btn-twitch-chat-login" class="btn-ghost" title="Log in to Twitch">Login</button></div>
                         <webview id="twitch-chat-wv" class="chat-webview" partition="persist:twitch-chat" allowpopups></webview>
                       </div>
                       <div class="chat-col">
-                        <div class="chat-col-header"><span>Kick Chat</span><button id="btn-reload-kick-chat" class="btn-ghost" title="Reload chat">↻</button></div>
+                        <div class="chat-col-header"><span>Kick Chat</span><button id="btn-reload-kick-chat" class="btn-ghost" title="Reload chat">↻</button><button id="btn-kick-chat-login" class="btn-ghost" title="Log in to Kick">Login</button></div>
                         <webview id="kick-chat-wv" class="chat-webview" partition="persist:kick-chat" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" allowpopups></webview>
                       </div>
                     </div>
@@ -161,17 +162,17 @@
                 <div id="overlay-offline" class="stream-offline">Waiting for stream source…</div>
               </div>
               <div id="stream-view-youtube" class="stream-view">
-                <div class="stream-header"><button id="btn-reload-yt-stream" class="btn-ghost" title="Reload stream">↻</button></div>
+                <div class="stream-header"><button id="btn-reload-yt-stream" class="btn-ghost" title="Reload stream">↻</button><button id="btn-yt-stream-login" class="btn-ghost" title="Log in to YouTube">Login</button></div>
                 <webview id="yt-stream-wv" class="stream-webview" partition="persist:yt-stream" allowpopups></webview>
                 <div id="yt-stream-offline" class="stream-offline" style="display:none">No YouTube channel configured</div>
               </div>
               <div id="stream-view-twitch" class="stream-view">
-                <div class="stream-header"><button id="btn-reload-twitch-stream" class="btn-ghost" title="Reload stream">↻</button></div>
+                <div class="stream-header"><button id="btn-reload-twitch-stream" class="btn-ghost" title="Reload stream">↻</button><button id="btn-twitch-stream-login" class="btn-ghost" title="Log in to Twitch">Login</button></div>
                 <webview id="twitch-stream-wv" class="stream-webview" partition="persist:twitch-stream" allowpopups></webview>
                 <div id="twitch-stream-offline" class="stream-offline" style="display:none">No Twitch channel configured</div>
               </div>
               <div id="stream-view-kick" class="stream-view">
-                <div class="stream-header"><button id="btn-reload-kick-stream" class="btn-ghost" title="Reload stream">↻</button></div>
+                <div class="stream-header"><button id="btn-reload-kick-stream" class="btn-ghost" title="Reload stream">↻</button><button id="btn-kick-stream-login" class="btn-ghost" title="Log in to Kick">Login</button></div>
                 <webview id="kick-stream-wv" class="stream-webview" partition="persist:kick-stream" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" allowpopups></webview>
                 <div id="kick-stream-offline" class="stream-offline" style="display:none">No Kick channel configured — add your channel name in Settings</div>
               </div>
@@ -513,16 +514,6 @@
               <span id="kick-login-status" class="yt-status"></span>
             </div>
             <span id="kick-session-status" class="yt-status" style="display:block;margin-top:6px"></span>
-            <div id="kick-cookie-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:none">
-              <div style="font-size:0.8em;color:var(--color-muted);margin-bottom:8px">Dashboard session — paste cookie values from Edge/Chrome (DevTools → Application → Cookies → kick.com). Persists for ~1 month.</div>
-              <label>kick_session <input id="kick-cookie-session" type="password" placeholder="Paste value…" /></label>
-              <label>session_token <input id="kick-cookie-token" type="password" placeholder="Paste value…" /></label>
-              <label>XSRF-TOKEN <input id="kick-cookie-xsrf" type="password" placeholder="Paste value…" /></label>
-              <div class="yt-auth-row" style="margin-top:8px">
-                <button id="btn-kick-inject-cookies" class="btn-secondary">Inject &amp; Reload Dashboard</button>
-                <span id="kick-cookie-status" class="yt-status"></span>
-              </div>
-            </div>
           </div>
           <div class="settings-section">
             <h3>F1 Live Timing</h3>

@@ -148,6 +148,112 @@ export function initHomeStreams() {
   document.getElementById('btn-reload-twitch-stream').addEventListener('click', () => twitchStreamWv.reload())
   document.getElementById('btn-reload-kick-stream').addEventListener('click', () => kickStreamWv.reload())
 
+  // Stream login buttons
+  let ytStreamLoginPending = false
+  document.getElementById('btn-yt-stream-login').addEventListener('click', async () => {
+    if (!ytStreamLoginPending) {
+      const btn = document.getElementById('btn-yt-stream-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://www.youtube.com')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      ytStreamLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      const btn = document.getElementById('btn-yt-stream-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:yt-stream', 'persist:yt-chat'])
+      ytStreamLoginPending = false
+      if (res.ok) {
+        btn.textContent = '✓'
+        ytStreamWv.reload()
+        ytChatWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
+
+  let twitchStreamLoginPending = false
+  document.getElementById('btn-twitch-stream-login').addEventListener('click', async () => {
+    if (!twitchStreamLoginPending) {
+      const btn = document.getElementById('btn-twitch-stream-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://www.twitch.tv')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      twitchStreamLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      const btn = document.getElementById('btn-twitch-stream-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:twitch-stream', 'persist:twitch-chat'])
+      twitchStreamLoginPending = false
+      if (res.ok) {
+        btn.textContent = '✓'
+        twitchStreamWv.reload()
+        twitchChatWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
+
+  let kickStreamLoginPending = false
+  document.getElementById('btn-kick-stream-login').addEventListener('click', async () => {
+    if (!kickStreamLoginPending) {
+      const btn = document.getElementById('btn-kick-stream-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://kick.com')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      kickStreamLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      const btn = document.getElementById('btn-kick-stream-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:kick-stream', 'persist:kick-chat'])
+      kickStreamLoginPending = false
+      if (res.ok) {
+        btn.textContent = '✓'
+        kickStreamWv.reload()
+        kickChatWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
+
   // ── YouTube chat ──
   const ytChatWv    = document.getElementById('yt-chat-wv')
   const btnLoadChat = document.getElementById('btn-load-yt-chat')
@@ -172,6 +278,41 @@ export function initHomeStreams() {
   btnLoadChat.addEventListener('click', loadYtChat)
   if (state.config.youtube?.refreshToken) loadYtChat()
 
+  let ytChatLoginPending = false
+  document.getElementById('btn-yt-chat-login').addEventListener('click', async () => {
+    if (!ytChatLoginPending) {
+      const btn = document.getElementById('btn-yt-chat-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://www.youtube.com')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      ytChatLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      const btn = document.getElementById('btn-yt-chat-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:yt-chat', 'persist:yt-stream'])
+      ytChatLoginPending = false
+      if (res.ok) {
+        btn.textContent = '✓'
+        ytChatWv.reload()
+        ytStreamWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
+
   // ── Twitch chat ──
   const twitchChatWv = document.getElementById('twitch-chat-wv')
 
@@ -182,6 +323,41 @@ export function initHomeStreams() {
   }
   loadTwitchChat()
   document.getElementById('btn-reload-twitch-chat').addEventListener('click', () => twitchChatWv.reload())
+
+  let twitchChatLoginPending = false
+  document.getElementById('btn-twitch-chat-login').addEventListener('click', async () => {
+    if (!twitchChatLoginPending) {
+      const btn = document.getElementById('btn-twitch-chat-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://www.twitch.tv')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      twitchChatLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      const btn = document.getElementById('btn-twitch-chat-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:twitch-chat', 'persist:twitch-stream'])
+      twitchChatLoginPending = false
+      if (res.ok) {
+        btn.textContent = '✓'
+        twitchChatWv.reload()
+        twitchStreamWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
 
   // ── Kick chat ──
   const kickChatWv = document.getElementById('kick-chat-wv')
@@ -194,6 +370,41 @@ export function initHomeStreams() {
   loadKickChat()
 
   document.getElementById('btn-reload-kick-chat').addEventListener('click', () => kickChatWv.reload())
+
+  let kickChatLoginPending = false
+  document.getElementById('btn-kick-chat-login').addEventListener('click', async () => {
+    if (!kickChatLoginPending) {
+      const btn = document.getElementById('btn-kick-chat-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://kick.com')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      kickChatLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      const btn = document.getElementById('btn-kick-chat-login')
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:kick-chat', 'persist:kick-stream'])
+      kickChatLoginPending = false
+      if (res.ok) {
+        btn.textContent = '✓'
+        kickChatWv.reload()
+        kickStreamWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
 
   // Expose webview internals for settings module
   window._webviewAPI = {

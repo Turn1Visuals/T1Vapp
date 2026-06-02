@@ -463,7 +463,6 @@ export function initSettings() {
   kickClientSecInput.disabled = true
   kickClientIdInput.closest('label').style.display  = 'none'
   kickClientSecInput.closest('label').style.display = 'none'
-  document.getElementById('kick-cookie-section').style.display = 'none'
   kickSaveBtn.textContent = 'Edit Kick Settings'
   kickSaveBtn.className   = 'btn-secondary'
 
@@ -577,6 +576,7 @@ export function initSettings() {
         kickLoginStatus.textContent = 'Authenticated'
         state.config.kick = { ...(state.config.kick || {}), browserAuthenticated: true }
         saveConfig()
+        console.log('[auth] Kick authenticated, cookies:', res.count, 'flag saved:', state.config.kick.browserAuthenticated)
         window._webviewAPI?.kickChatWv?.reload()
         window._webviewAPI?.kickStreamWv?.reload()
       } else {
@@ -589,64 +589,6 @@ export function initSettings() {
         kickLoginStatus.textContent = ''
       }, 3000)
     }
-  })
-
-  const kickCookieSessionInput = document.getElementById('kick-cookie-session')
-  const kickCookieTokenInput   = document.getElementById('kick-cookie-token')
-  const kickCookieXsrfInput    = document.getElementById('kick-cookie-xsrf')
-  const kickInjectBtn          = document.getElementById('btn-kick-inject-cookies')
-  const kickCookieStatus       = document.getElementById('kick-cookie-status')
-  const kickSessionStatus      = document.getElementById('kick-session-status')
-
-  // Restore saved cookie values
-  kickCookieSessionInput.value = state.config.kick?.cookieSession || ''
-  kickCookieTokenInput.value   = state.config.kick?.cookieToken   || ''
-  kickCookieXsrfInput.value    = state.config.kick?.cookieXsrf    || ''
-
-  window.api.kick.checkSession().then(res => {
-    if (res.ok) {
-      kickSessionStatus.textContent = '● Dashboard session active' + (res.expiresAt ? ` — expires ${res.expiresAt}` : '')
-      kickSessionStatus.className   = 'yt-status connected'
-    } else {
-      kickSessionStatus.textContent = ''
-    }
-  })
-
-  kickInjectBtn.addEventListener('click', async () => {
-    const kickSession  = kickCookieSessionInput.value.trim()
-    const sessionToken = kickCookieTokenInput.value.trim()
-    const xsrfToken    = kickCookieXsrfInput.value.trim()
-    if (!kickSession && !sessionToken) {
-      kickCookieStatus.textContent = 'Paste at least kick_session'
-      kickCookieStatus.className   = 'yt-status error'
-      return
-    }
-    kickInjectBtn.disabled = true
-    kickCookieStatus.textContent = 'Injecting…'
-    kickCookieStatus.className   = 'yt-status'
-    const res = await window.api.kick.injectCookies({ kickSession, sessionToken, xsrfToken })
-    if (res.ok) {
-      // Save to config so fields persist
-      if (!state.config.kick) state.config.kick = {}
-      state.config.kick.cookieSession = kickSession
-      state.config.kick.cookieToken   = sessionToken
-      state.config.kick.cookieXsrf    = xsrfToken
-      saveConfig()
-      kickCookieStatus.textContent  = '✓ Injected — reloading dashboard'
-      kickCookieStatus.className    = 'yt-status connected'
-      kickSessionStatus.textContent = '● Dashboard session active'
-      kickSessionStatus.className   = 'yt-status connected'
-      if (window._kickStreamAPI) {
-        window._kickStreamAPI.setKickStreamLoaded(true)
-        window._kickStreamAPI.kickStreamWv.style.display = ''
-        window._kickStreamAPI.kickStreamOffline.style.display = 'none'
-        window._kickStreamAPI.kickStreamWv.loadURL('https://kick.com/dashboard')
-      }
-    } else {
-      kickCookieStatus.textContent = 'Failed: ' + res.error
-      kickCookieStatus.className   = 'yt-status error'
-    }
-    kickInjectBtn.disabled = false
   })
 
   // Browser tabs

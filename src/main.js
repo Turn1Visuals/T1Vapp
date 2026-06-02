@@ -1661,6 +1661,18 @@ ipcMain.handle('browser:checkCookies', async (_, partition, domain) => {
   }
 })
 
+ipcMain.handle('browser:injectCookie', async (_, partition, domain, name, value) => {
+  try {
+    const ses = session.fromPartition(partition)
+    const url = `https://${domain}`
+    await ses.cookies.set({ name, value, url, domain: `.${domain}` })
+    await ses.cookies.flushStore()
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
 ipcMain.handle('browser:finishSiteLogin', async (_, partitions = ['persist:browser']) => {
   if (!siteLoginChrome) return { ok: false, error: 'No login session active' }
   if (siteLoginChrome.killed) return { ok: false, error: 'Chrome window was closed — please keep it open until you click Done' }
