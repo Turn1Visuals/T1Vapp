@@ -70,11 +70,16 @@ export function initNotes() {
       e.stopPropagation()
       setEditMode(titleInput.readOnly)
     })
-    copyBtn.addEventListener('click', e => {
+    copyBtn.addEventListener('click', async e => {
       e.stopPropagation()
-      navigator.clipboard.writeText(bodyInput.value)
-      copyBtn.textContent = '✓'
-      setTimeout(() => { copyBtn.textContent = '⎘' }, 1200)
+      const result = await window.api.clipboard.write(bodyInput.value)
+      if (result.ok) {
+        copyBtn.textContent = '✓'
+        setTimeout(() => { copyBtn.textContent = '⎘' }, 1200)
+      } else {
+        copyBtn.textContent = '✕'
+        setTimeout(() => { copyBtn.textContent = '⎘' }, 1200)
+      }
     })
 
     // Drag to reorder

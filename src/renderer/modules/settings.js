@@ -175,48 +175,6 @@ export function initSettings() {
   })
 
   // YouTube chat/stream login
-  const ytLoginBtn = document.getElementById('btn-yt-login')
-  const ytLoginStatus = document.getElementById('yt-login-status')
-  let ytLoginPending = false
-  ytLoginBtn.addEventListener('click', async () => {
-    if (!ytLoginPending) {
-      ytLoginBtn.disabled = true
-      ytLoginBtn.textContent = '…'
-      const res = await window.api.browser.siteLogin('https://www.youtube.com')
-      if (!res.ok) {
-        ytLoginBtn.textContent = 'Login'
-        ytLoginBtn.disabled = false
-        ytLoginStatus.textContent = 'Failed'
-        return
-      }
-      ytLoginPending = true
-      ytLoginBtn.textContent = 'Done'
-      ytLoginBtn.disabled = false
-      ytLoginStatus.textContent = 'Open YouTube in the browser, then click Done again'
-    } else {
-      ytLoginBtn.disabled = true
-      ytLoginBtn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:yt-chat', 'persist:yt-stream'])
-      ytLoginPending = false
-      if (res.ok) {
-        ytLoginBtn.textContent = '✓'
-        ytLoginStatus.textContent = 'Authenticated'
-        state.config.youtube = { ...(state.config.youtube || {}), browserAuthenticated: true }
-        saveConfig()
-        window._webviewAPI?.ytChatWv?.reload()
-        window._webviewAPI?.ytStreamWv?.reload()
-      } else {
-        ytLoginBtn.textContent = '✕'
-        ytLoginStatus.textContent = res.error || 'Failed'
-      }
-      setTimeout(() => {
-        ytLoginBtn.textContent = 'Login'
-        ytLoginBtn.disabled = false
-        ytLoginStatus.textContent = ''
-      }, 3000)
-    }
-  })
-
   // TikTok credentials
   const ttClientKey    = document.getElementById('tt-client-key')
   const ttClientSecret = document.getElementById('tt-client-secret')
@@ -403,48 +361,6 @@ export function initSettings() {
   })
 
   // Twitch chat/stream login
-  const twitchLoginBtn = document.getElementById('btn-twitch-login')
-  const twitchLoginStatus = document.getElementById('twitch-login-status')
-  let twitchLoginPending = false
-  twitchLoginBtn.addEventListener('click', async () => {
-    if (!twitchLoginPending) {
-      twitchLoginBtn.disabled = true
-      twitchLoginBtn.textContent = '…'
-      const res = await window.api.browser.siteLogin('https://www.twitch.tv')
-      if (!res.ok) {
-        twitchLoginBtn.textContent = 'Login'
-        twitchLoginBtn.disabled = false
-        twitchLoginStatus.textContent = 'Failed'
-        return
-      }
-      twitchLoginPending = true
-      twitchLoginBtn.textContent = 'Done'
-      twitchLoginBtn.disabled = false
-      twitchLoginStatus.textContent = 'Open Twitch in the browser, then click Done again'
-    } else {
-      twitchLoginBtn.disabled = true
-      twitchLoginBtn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:twitch-chat', 'persist:twitch-stream'])
-      twitchLoginPending = false
-      if (res.ok) {
-        twitchLoginBtn.textContent = '✓'
-        twitchLoginStatus.textContent = 'Authenticated'
-        state.config.twitch = { ...(state.config.twitch || {}), browserAuthenticated: true }
-        saveConfig()
-        window._webviewAPI?.twitchChatWv?.reload()
-        window._webviewAPI?.twitchStreamWv?.reload()
-      } else {
-        twitchLoginBtn.textContent = '✕'
-        twitchLoginStatus.textContent = res.error || 'Failed'
-      }
-      setTimeout(() => {
-        twitchLoginBtn.textContent = 'Login'
-        twitchLoginBtn.disabled = false
-        twitchLoginStatus.textContent = ''
-      }, 3000)
-    }
-  })
-
   // ── Kick settings ──
   const kickChannelInput  = document.getElementById('kick-channel')
   const kickClientIdInput = document.getElementById('kick-client-id')
@@ -548,49 +464,6 @@ export function initSettings() {
   })
 
   // Kick chat/stream login
-  const kickLoginBtn = document.getElementById('btn-kick-login')
-  const kickLoginStatus = document.getElementById('kick-login-status')
-  let kickLoginPending = false
-  kickLoginBtn.addEventListener('click', async () => {
-    if (!kickLoginPending) {
-      kickLoginBtn.disabled = true
-      kickLoginBtn.textContent = '…'
-      const res = await window.api.browser.siteLogin('https://kick.com')
-      if (!res.ok) {
-        kickLoginBtn.textContent = 'Login'
-        kickLoginBtn.disabled = false
-        kickLoginStatus.textContent = 'Failed'
-        return
-      }
-      kickLoginPending = true
-      kickLoginBtn.textContent = 'Done'
-      kickLoginBtn.disabled = false
-      kickLoginStatus.textContent = 'Open Kick in the browser, then click Done again'
-    } else {
-      kickLoginBtn.disabled = true
-      kickLoginBtn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:kick-chat', 'persist:kick-stream'])
-      kickLoginPending = false
-      if (res.ok) {
-        kickLoginBtn.textContent = '✓'
-        kickLoginStatus.textContent = 'Authenticated'
-        state.config.kick = { ...(state.config.kick || {}), browserAuthenticated: true }
-        saveConfig()
-        console.log('[auth] Kick authenticated, cookies:', res.count, 'flag saved:', state.config.kick.browserAuthenticated)
-        window._webviewAPI?.kickChatWv?.reload()
-        window._webviewAPI?.kickStreamWv?.reload()
-      } else {
-        kickLoginBtn.textContent = '✕'
-        kickLoginStatus.textContent = res.error || 'Failed'
-      }
-      setTimeout(() => {
-        kickLoginBtn.textContent = 'Login'
-        kickLoginBtn.disabled = false
-        kickLoginStatus.textContent = ''
-      }, 3000)
-    }
-  })
-
   // Browser tabs
   const tabList = document.getElementById('browser-tab-list')
 

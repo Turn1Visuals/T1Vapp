@@ -2422,6 +2422,15 @@ ipcMain.handle('f1:logout', () => {
   return { ok: true }
 })
 
+ipcMain.handle('clipboard:write', (_, text) => {
+  try {
+    require('electron').clipboard.writeText(text)
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
 // ── Overlay HTTP server ───────────────────────────────────────────────────────
 
 const OVERLAY_PORT = 47200

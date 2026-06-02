@@ -139,7 +139,7 @@ export function initHomeStreams() {
     if (!channel) { kickStreamOffline.style.display = ''; kickStreamWv.style.display = 'none'; return }
     kickStreamOffline.style.display = 'none'
     kickStreamWv.style.display = ''
-    kickStreamWv.src = `https://kick.com/dashboard`
+    kickStreamWv.src = `https://www.kick.com`
     kickStreamLoaded = true
   }
 
@@ -171,6 +171,8 @@ export function initHomeStreams() {
       const res = await window.api.browser.finishSiteLogin(['persist:yt-stream', 'persist:yt-chat'])
       ytStreamLoginPending = false
       if (res.ok) {
+        state.config.youtube = { ...(state.config.youtube || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
         btn.textContent = '✓'
         ytStreamWv.reload()
         ytChatWv.reload()
@@ -206,6 +208,8 @@ export function initHomeStreams() {
       const res = await window.api.browser.finishSiteLogin(['persist:twitch-stream', 'persist:twitch-chat'])
       twitchStreamLoginPending = false
       if (res.ok) {
+        state.config.twitch = { ...(state.config.twitch || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
         btn.textContent = '✓'
         twitchStreamWv.reload()
         twitchChatWv.reload()
@@ -241,6 +245,8 @@ export function initHomeStreams() {
       const res = await window.api.browser.finishSiteLogin(['persist:kick-stream', 'persist:kick-chat'])
       kickStreamLoginPending = false
       if (res.ok) {
+        state.config.kick = { ...(state.config.kick || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
         btn.textContent = '✓'
         kickStreamWv.reload()
         kickChatWv.reload()
@@ -300,6 +306,8 @@ export function initHomeStreams() {
       const res = await window.api.browser.finishSiteLogin(['persist:yt-chat', 'persist:yt-stream'])
       ytChatLoginPending = false
       if (res.ok) {
+        state.config.youtube = { ...(state.config.youtube || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
         btn.textContent = '✓'
         ytChatWv.reload()
         ytStreamWv.reload()
@@ -346,6 +354,8 @@ export function initHomeStreams() {
       const res = await window.api.browser.finishSiteLogin(['persist:twitch-chat', 'persist:twitch-stream'])
       twitchChatLoginPending = false
       if (res.ok) {
+        state.config.twitch = { ...(state.config.twitch || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
         btn.textContent = '✓'
         twitchChatWv.reload()
         twitchStreamWv.reload()
@@ -393,6 +403,8 @@ export function initHomeStreams() {
       const res = await window.api.browser.finishSiteLogin(['persist:kick-chat', 'persist:kick-stream'])
       kickChatLoginPending = false
       if (res.ok) {
+        state.config.kick = { ...(state.config.kick || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
         btn.textContent = '✓'
         kickChatWv.reload()
         kickStreamWv.reload()

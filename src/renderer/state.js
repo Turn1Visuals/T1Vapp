@@ -8,5 +8,5 @@ export const state = {
 }
 
 export function saveConfig() {
-  window.api.config.save(state.config)
+  return window.api.config.save(state.config)
 }

@@ -55,6 +55,9 @@ contextBridge.exposeInMainWorld('api', {
     openExternal:    (url) => ipcRenderer.invoke('app:openExternal', url),
     openLoginWindow: (url) => ipcRenderer.invoke('app:openLoginWindow', url)
   },
+  clipboard: {
+    write: (text) => ipcRenderer.invoke('clipboard:write', text)
+  },
   http: {
     fetchJson: (url) => ipcRenderer.invoke('http:fetchJson', url)
   },
