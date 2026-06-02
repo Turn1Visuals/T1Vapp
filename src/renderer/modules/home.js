@@ -139,7 +139,7 @@ export function initHomeStreams() {
     if (!channel) { kickStreamOffline.style.display = ''; kickStreamWv.style.display = 'none'; return }
     kickStreamOffline.style.display = 'none'
     kickStreamWv.style.display = ''
-    kickStreamWv.src = `https://www.kick.com`
+    kickStreamWv.src = `https://dashboard.kick.com/stream`
     kickStreamLoaded = true
   }
 
@@ -242,7 +242,7 @@ export function initHomeStreams() {
       const btn = document.getElementById('btn-kick-stream-login')
       btn.disabled = true
       btn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:kick-stream', 'persist:kick-chat'])
+      const res = await window.api.browser.finishSiteLogin(['persist:kickstream', 'persist:kickchat'])
       kickStreamLoginPending = false
       if (res.ok) {
         state.config.kick = { ...(state.config.kick || {}), browserAuthenticated: true }
@@ -400,7 +400,7 @@ export function initHomeStreams() {
       const btn = document.getElementById('btn-kick-chat-login')
       btn.disabled = true
       btn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:kick-chat', 'persist:kick-stream'])
+      const res = await window.api.browser.finishSiteLogin(['persist:kickchat', 'persist:kickstream'])
       kickChatLoginPending = false
       if (res.ok) {
         state.config.kick = { ...(state.config.kick || {}), browserAuthenticated: true }
