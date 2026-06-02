@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; media-src 'self' file:;" />
+  <title>T1V</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Title bar -->
+  <div id="titlebar">
+    <span id="titlebar-title">T1V</span>
+    <div id="titlebar-controls">
+      <button id="btn-minimize">─</button>
+      <button id="btn-maximize">□</button>
+      <button id="btn-close">✕</button>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div id="tabbar">
+    <button class="tab active" data-tab="home">Home</button>
+    <button class="tab" data-tab="media">Media</button>
+    <button class="tab" data-tab="notes">Notes</button>
+    <button class="tab" data-tab="browser">Browser</button>
+    <button class="tab" data-tab="f1">F1</button>
+    <button class="tab" data-tab="livetiming">Live Timing</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- Main layout: panels + persistent browser sidebar -->
+  <div id="main-layout">
+
+    <!-- Persistent launcher sidebar (always visible on the left) -->
+    <div id="launcher-sidebar">
+      <div id="launcher-grid" class="launcher-grid">
+        <div id="btn-add-launcher" class="launcher-tile launcher-add-tile">
+          <span class="tile-icon">+</span>
+          <span class="tile-name">Add</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab panels -->
+    <div id="content">
+
+      <!-- HOME TAB -->
+      <div id="tab-home" class="panel active">
+        <div class="home-streams">
+
+          <div class="stream-col">
+            <div class="stream-tab-bar">
+              <button class="stream-tab active" data-view="controls">Controls</button>
+              <button class="stream-tab" data-view="overlay">Stream</button>
+              <button class="stream-tab" data-view="youtube">YouTube</button>
+              <button class="stream-tab" data-view="twitch">Twitch</button>
+              <button class="stream-tab" data-view="kick">Kick</button>
+              <div class="stream-tab-actions">
+                <button id="btn-overlay-reload" class="btn-ghost" title="Reload overlay" style="display:none">↺</button>
+                <button id="btn-swap-layout" class="btn-ghost" title="Swap columns">⇄</button>
+              </div>
+            </div>
+            <div class="stream-views-wrap">
+              <div id="stream-view-controls" class="stream-view active">
+                <div class="controls-panel">
+                  <div class="controls-left">
+                    <div class="setup-block obs-block">
+                      <div class="obs-row">
+                        <div class="obs-col">
+                          <div class="obs-col-title">
+                            <span class="setup-block-label">OBS</span>
+                            <span id="golive-status" class="obs-status"></span>
+                          </div>
+                          <div class="obs-col-content">
+                            <button id="btn-go-live" class="btn-obs btn-start">Go Live</button>
+                            <button id="btn-vcam-toggle" class="btn-obs btn-stop">Start Virtual Camera</button>
+                            <button id="btn-stream-details" class="btn-obs btn-stop">Stream Details…</button>
+                          </div>
+                        </div>
+                        <div class="obs-col obs-col--scenes">
+                          <div id="obs-scenes" class="obs-scenes-list"></div>
+                        </div>
+                        <div class="obs-col">
+                          <div class="obs-col-title">Stats</div>
+                          <div class="obs-stats-row">
+                            <div class="obs-col-content" id="obs-stream-stats"></div>
+                            <div class="obs-col-content" id="obs-sys-stats"></div>
+                          </div>
+                        </div>
+                        <div class="obs-col">
+                          <div class="obs-col-title">Viewers</div>
+                          <div class="obs-col-content">
+                            <div id="yt-viewers-row" class="viewer-row" style="display:none">
+                              <span class="viewer-platform"><span class="viewer-dot" style="background:#ff0000"></span>YouTube</span>
+                              <span id="yt-viewers-count" class="viewer-count"></span>
+                            </div>
+                            <div id="tw-viewers-row" class="viewer-row" style="display:none">
+                              <span class="viewer-platform"><span class="viewer-dot" style="background:#9147ff"></span>Twitch</span>
+                              <span id="tw-viewers-count" class="viewer-count"></span>
+                            </div>
+                            <div id="kick-viewers-row" class="viewer-row" style="display:none">
+                              <span class="viewer-platform"><span class="viewer-dot" style="background:#53fc18"></span>Kick</span>
+                              <span id="kick-viewers-count" class="viewer-count"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="setup-block" id="vcam-timeline" style="display:none">
+                      <div class="vcam-tl-info">
+                        <button id="vcam-tl-play" class="vcam-tl-play-btn" title="Play/Pause">▶</button>
+                        <span id="vcam-tl-label"></span>
+                        <span id="vcam-tl-live" class="vcam-tl-live-badge" style="display:none">LIVE</span>
+                        <span id="vcam-tl-time" class="vcam-tl-time"></span>
+                      </div>
+                      <div id="vcam-tl-bar-wrap" class="vcam-tl-bar-wrap">
+                        <div id="vcam-tl-bar" class="vcam-tl-bar"></div>
+                      </div>
+                    </div>
+                    <div class="vcam-block">
+                      <video id="vcam-video" class="vcam-video" autoplay muted playsinline></video>
+                      <div id="vcam-offline" class="vcam-offline">OBS Virtual Camera not running</div>
+                      <div class="vcam-hud">
+                        <div class="vcam-hud-top">
+                          <button id="btn-vcam-fullscreen" class="vcam-fullscreen-btn" title="Fullscreen">⛶</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="controls-right">
+                    <div class="chat-send-bar">
+                      <input id="chat-msg-input" class="chat-msg-input" type="text" placeholder="Send to chat…" />
+                      <button id="btn-send-both" class="btn-secondary">Send Both</button>
+                      <span id="chat-send-status" class="muted"></span>
+                    </div>
+                    <div class="chat-cols-row">
+                      <div class="chat-col">
+                        <div class="chat-col-header">
+                          <span>YouTube Chat</span>
+                          <button id="btn-load-yt-chat" class="btn-ghost" title="Load / Refresh chat">↻</button>
+                        </div>
+                        <webview id="yt-chat-wv" class="chat-webview" partition="persist:yt-chat" allowpopups></webview>
+                      </div>
+                      <div class="chat-col">
+                        <div class="chat-col-header"><span>Twitch Chat</span><button id="btn-reload-twitch-chat" class="btn-ghost" title="Reload chat">↻</button></div>
+                        <webview id="twitch-chat-wv" class="chat-webview" partition="persist:twitch-chat" allowpopups></webview>
+                      </div>
+                      <div class="chat-col">
+                        <div class="chat-col-header"><span>Kick Chat</span><button id="btn-reload-kick-chat" class="btn-ghost" title="Reload chat">↻</button></div>
+                        <webview id="kick-chat-wv" class="chat-webview" partition="persist:kick-chat" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" allowpopups></webview>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="stream-view-overlay" class="stream-view">
+                <div id="overlay-viewport">
+                  <webview id="overlay-webview" partition="persist:overlay" allowpopups></webview>
+                </div>
+                <div id="overlay-offline" class="stream-offline">Waiting for stream source…</div>
+              </div>
+              <div id="stream-view-youtube" class="stream-view">
+                <div class="stream-header"><button id="btn-reload-yt-stream" class="btn-ghost" title="Reload stream">↻</button></div>
+                <webview id="yt-stream-wv" class="stream-webview" partition="persist:yt-stream" allowpopups></webview>
+                <div id="yt-stream-offline" class="stream-offline" style="display:none">No YouTube channel configured</div>
+              </div>
+              <div id="stream-view-twitch" class="stream-view">
+                <div class="stream-header"><button id="btn-reload-twitch-stream" class="btn-ghost" title="Reload stream">↻</button></div>
+                <webview id="twitch-stream-wv" class="stream-webview" partition="persist:twitch-stream" allowpopups></webview>
+                <div id="twitch-stream-offline" class="stream-offline" style="display:none">No Twitch channel configured</div>
+              </div>
+              <div id="stream-view-kick" class="stream-view">
+                <div class="stream-header"><button id="btn-reload-kick-stream" class="btn-ghost" title="Reload stream">↻</button></div>
+                <webview id="kick-stream-wv" class="stream-webview" partition="persist:kick-stream" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" allowpopups></webview>
+                <div id="kick-stream-offline" class="stream-offline" style="display:none">No Kick channel configured — add your channel name in Settings</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MEDIA TAB -->
+      <div id="tab-media" class="panel">
+        <div class="panel-header"><h2>Media Upload</h2></div>
+
+        <div class="media-body">
+
+          <!-- Left: video player -->
+          <div class="media-left">
+            <div class="media-picker-block">
+              <button id="btn-pick-video" class="btn-secondary">Select Video</button>
+              <span id="video-filename" class="media-filename muted">No file selected</span>
+            </div>
+            <div id="video-preview-wrap" class="video-preview-wrap" style="display:none">
+              <video id="media-video" class="media-video" controls></video>
+            </div>
+            <div id="video-placeholder" class="video-placeholder">
+              <span>No video selected</span>
+            </div>
+          </div>
+
+          <!-- Right: content fields -->
+          <div class="media-right">
+            <div class="media-picker-block">
+              <button id="btn-pick-json" class="btn-secondary">Load Session Data</button>
+              <span id="json-filename" class="media-filename muted">No file selected</span>
+              <button id="btn-clear-json" class="btn-ghost" style="display:none" title="Clear">✕</button>
+            </div>
+
+            <div class="media-fields">
+              <label class="media-label">
+                Title
+                <input id="media-title" type="text" class="media-input" placeholder="Video title…" />
+              </label>
+              <label class="media-label">
+                Hashtags
+                <input id="media-hashtags" type="text" class="media-input" placeholder="#f1 #formula1 #turn1visuals" />
+              </label>
+              <label class="media-label">
+                Description
+                <textarea id="media-description" class="media-textarea" placeholder="Description…"></textarea>
+              </label>
+            </div>
+
+          </div>
+
+          <!-- Post to + Upload + Results column -->
+          <div class="media-results" id="media-results">
+            <span class="media-platforms-label">Post to:</span>
+            <div class="platform-group">
+              <label class="platform-check"><input type="checkbox" id="plat-youtube" /> YouTube</label>
+              <div class="platform-opts">
+                <div class="platform-opt-row">
+                  <span class="media-platforms-label">Visibility</span>
+                  <select id="yt-visibility" class="media-select">
+                    <option value="private">Private</option>
+                    <option value="unlisted">Unlisted</option>
+                    <option value="public" selected>Public</option>
+                  </select>
+                </div>
+                <div class="platform-opt-row">
+                  <span class="media-platforms-label">Category</span>
+                  <select id="yt-category" class="media-select">
+                    <option value="17">Sports</option>
+                    <option value="20">Gaming</option>
+                    <option value="25">News & Politics</option>
+                    <option value="24">Entertainment</option>
+                    <option value="22">People & Blogs</option>
+                    <option value="28">Science & Technology</option>
+                    <option value="27">Education</option>
+                    <option value="10">Music</option>
+                    <option value="2">Autos & Vehicles</option>
+                    <option value="1">Film & Animation</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="platform-group">
+              <label class="platform-check"><input type="checkbox" id="plat-tiktok" /> TikTok</label>
+              <div class="platform-opts">
+                <div class="platform-opt-row">
+                  <span class="media-platforms-label">Visibility</span>
+                  <select id="tt-visibility" class="media-select">
+                    <option value="PUBLIC_TO_EVERYONE">Public</option>
+                    <option value="MUTUAL_FOLLOW_FRIENDS">Friends</option>
+                    <option value="SELF_ONLY">Private</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="media-upload-row">
+              <button id="btn-upload" class="btn-primary" disabled>Upload</button>
+              <span id="upload-status" class="muted"></span>
+            </div>
+            <div class="results-divider"></div>
+            <div class="results-empty muted" id="results-empty">Upload results will appear here</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- BROWSER TAB -->
+      <div id="tab-notes" class="panel">
+        <div class="notes-toolbar">
+          <button id="btn-add-note" class="btn-primary">+ New Note</button>
+        </div>
+        <div id="notes-list" class="notes-list"></div>
+      </div>
+
+      <div id="tab-browser" class="panel">
+        <div id="browser-addressbar">
+          <button id="browser-back" title="Back">‹</button>
+          <button id="browser-forward" title="Forward">›</button>
+          <button id="browser-reload" title="Reload">↺</button>
+          <input id="browser-url-input" type="text" placeholder="Enter URL and press Enter…" />
+          <button id="browser-url-go">↵</button>
+          <div class="zoom-controls">
+            <button id="browser-zoom-out" title="Zoom out (Ctrl+−)">−</button>
+            <span id="browser-zoom-label">100%</span>
+            <button id="browser-zoom-in" title="Zoom in (Ctrl++)">+</button>
+          </div>
+          <button id="browser-login" title="Open login window for this site">Login</button>
+          <button id="browser-open-edge" title="Open in Edge">&#x2197;</button>
+          <button id="browser-devtools" title="DevTools (Ctrl+Shift+I)">⚙</button>
+        </div>
+        <div id="browser-views">
+          <div id="browser-empty" class="browser-empty">
+            No tabs yet. Enter a URL above or click "+" in the sidebar.
+          </div>
+        </div>
+      </div>
+
+      <!-- F1 TAB -->
+      <div id="tab-f1" class="panel">
+        <div class="panel-header">
+          <h2>F1</h2>
+          <div class="f1-assets-bar">
+            <span id="f1-assets-date" class="muted"></span>
+            <button id="btn-f1-assets-refresh" class="btn-ghost">↻ Refresh assets</button>
+          </div>
+        </div>
+        <div class="f1-subtab-bar">
+          <button class="f1-subtab active" data-f1tab="standings">Standings</button>
+          <button class="f1-subtab" data-f1tab="drivers">Drivers</button>
+          <button class="f1-subtab" data-f1tab="teams">Teams</button>
+          <button class="f1-subtab" data-f1tab="schedule">Schedule</button>
+        </div>
+        <div class="f1-subtab-content">
+          <div id="f1-view-standings" class="f1-view active"><p class="muted">Loading standings…</p></div>
+          <div id="f1-view-drivers"   class="f1-view"><p class="muted">Loading drivers…</p></div>
+          <div id="f1-view-teams"     class="f1-view"><p class="muted">Loading teams…</p></div>
+          <div id="f1-view-schedule"  class="f1-view"><p class="muted">Loading schedule…</p></div>
+        </div>
+      </div>
+
+      <!-- LIVE TIMING TAB -->
+      <div id="tab-livetiming" class="panel">
+        <div class="panel-header">
+          <h2>Live Timing</h2>
+          <div id="lt-status-bar">
+            <span id="lt-status-text" class="lt-status-text">No session loaded</span>
+            <button id="lt-live-btn" class="btn-secondary">Connect Live</button>
+            <button id="lt-unload-btn" class="btn-secondary" style="display:none">Unload</button>
+          </div>
+        </div>
+
+        <div class="lt-body">
+
+          <!-- Left: session picker -->
+          <div class="lt-sidebar">
+            <div class="lt-year-row">
+              <select id="lt-year-select"></select>
+              <button id="lt-year-load" class="btn-primary">Load</button>
+            </div>
+            <div id="lt-session-list" class="lt-session-list">
+              <p class="muted" style="padding:12px">Select a year and click Load.</p>
+            </div>
+          </div>
+
+          <!-- Right: playback + info -->
+          <div class="lt-main">
+            <div class="lt-playback-bar" id="lt-playback-bar" style="display:none">
+              <button id="lt-play-btn" class="btn-primary lt-play-btn">▶</button>
+              <div class="lt-seek-wrap">
+                <input type="range" id="lt-seek" min="0" max="100" value="0" step="0.1" class="lt-seek" />
+                <div class="lt-seek-labels">
+                  <span id="lt-offset-label">0:00:00</span>
+                  <span id="lt-duration-label">0:00:00</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="lt-info-grid" class="lt-info-grid">
+              <div class="lt-info-card" id="lt-card-session">
+                <span class="lt-info-label">Session</span>
+                <span class="lt-info-value" id="lt-val-session">—</span>
+              </div>
+              <div class="lt-info-card">
+                <span class="lt-info-label">Status</span>
+                <span class="lt-info-value" id="lt-val-session-status">—</span>
+              </div>
+              <div class="lt-info-card">
+                <span class="lt-info-label">Track</span>
+                <span class="lt-info-value" id="lt-val-track">—</span>
+              </div>
+              <div class="lt-info-card">
+                <span class="lt-info-label">Weather</span>
+                <span class="lt-info-value" id="lt-val-weather">—</span>
+              </div>
+              <div class="lt-info-card">
+                <span class="lt-info-label">Lap</span>
+                <span class="lt-info-value" id="lt-val-lap">—</span>
+              </div>
+              <div class="lt-info-card">
+                <span class="lt-info-label">Safety Car</span>
+                <span class="lt-info-value" id="lt-val-sc">—</span>
+              </div>
+            </div>
+
+            <div class="lt-tabs">
+              <button class="lt-tab active" data-ltview="drivers">Drivers</button>
+              <button class="lt-tab" data-ltview="state">State</button>
+              <button class="lt-tab" data-ltview="events">Events</button>
+              <button class="lt-tab" data-ltview="file">File</button>
+              <button class="lt-tab" data-ltview="circuits">Circuit Images</button>
+            </div>
+
+            <div class="lt-tab-content">
+              <div id="lt-view-circuits" class="lt-view">
+                <div class="ci-toolbar">
+                  <select id="ci-year-select"></select>
+                  <button id="ci-year-load" class="btn-primary">Load</button>
+                  <span id="ci-status" class="muted" style="font-size:11px"></span>
+                </div>
+                <div id="ci-grid" class="ci-grid"></div>
+              </div>
+              <div id="lt-view-drivers" class="lt-view active">
+                <div id="lt-drivers" class="lt-drivers"></div>
+              </div>
+              <div id="lt-view-state" class="lt-view">
+                <pre id="lt-raw-state" class="lt-raw-pre"></pre>
+              </div>
+              <div id="lt-view-events" class="lt-view">
+                <div class="lt-events-toolbar">
+                  <button id="lt-events-clear" class="btn-ghost" style="font-size:11px">Clear</button>
+                  <label style="font-size:11px;color:#888"><input type="checkbox" id="lt-events-pause"> Pause</label>
+                </div>
+                <div id="lt-events-log" class="lt-events-log"></div>
+              </div>
+              <div id="lt-view-file" class="lt-view">
+                <div class="lt-file-toolbar">
+                  <button id="lt-file-open-folder" class="btn-ghost" style="font-size:11px">Open cache folder</button>
+                  <span id="lt-file-info" class="muted" style="font-size:11px"></span>
+                </div>
+                <pre id="lt-raw-file" class="lt-raw-pre"></pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="tab-settings" class="panel">
+        <div class="panel-header"><h2>Settings</h2></div>
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h3>OBS WebSocket</h3>
+            <label>Host <input id="obs-host" type="text" placeholder="localhost" /></label>
+            <label>Port <input id="obs-port" type="number" placeholder="4455" /></label>
+            <label>Password <input id="obs-password" type="password" placeholder="(none)" /></label>
+            <button id="btn-save-obs" class="btn-primary">Save OBS Settings</button>
+          </div>
+          <div class="settings-section">
+            <h3>Overlay Preview</h3>
+            <label>URL <input id="overlay-url-input" type="text" placeholder="http://localhost:5173/" /></label>
+            <button id="btn-save-overlay" class="btn-secondary">Edit Overlay URL</button>
+          </div>
+          <div class="settings-section">
+            <h3>YouTube</h3>
+            <label>Client ID <input id="yt-client-id" type="text" placeholder="…apps.googleusercontent.com" /></label>
+            <label>Client Secret <input id="yt-client-secret" type="password" placeholder="GOCSPX-…" /></label>
+            <label>Channel ID <input id="yt-channel-id" type="text" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-yt-save" class="btn-primary">Save</button>
+              <button id="btn-yt-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="yt-status" class="yt-status"></span>
+            </div>
+            <div class="yt-auth-row" style="margin-top:8px">
+              <button id="btn-yt-login" class="btn-secondary">Login</button>
+              <span id="yt-login-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>TikTok</h3>
+            <label>Client Key <input id="tt-client-key" type="text" placeholder="sbawdq…" /></label>
+            <label>Client Secret <input id="tt-client-secret" type="password" placeholder="sRqmJs…" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-tt-save" class="btn-primary">Save</button>
+              <button id="btn-tt-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="tt-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Twitch</h3>
+            <label>Channel Name <input id="twitch-channel" type="text" placeholder="turn1visuals" /></label>
+            <label>Client ID <input id="twitch-client-id" type="text" placeholder="Twitch app client ID" /></label>
+            <label>Client Secret <input id="twitch-client-secret" type="password" placeholder="Twitch app client secret" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-twitch-save" class="btn-primary">Save</button>
+              <button id="btn-twitch-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="twitch-status" class="yt-status"></span>
+            </div>
+            <div class="yt-auth-row" style="margin-top:8px">
+              <button id="btn-twitch-login" class="btn-secondary">Login</button>
+              <span id="twitch-login-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Kick</h3>
+            <label>Channel Name <input id="kick-channel" type="text" placeholder="turn1visuals" /></label>
+            <label>Client ID <input id="kick-client-id" type="text" placeholder="Kick app client ID" /></label>
+            <label>Client Secret <input id="kick-client-secret" type="password" placeholder="Kick app client secret" /></label>
+            <div class="yt-auth-row">
+              <button id="btn-kick-save" class="btn-primary">Save</button>
+              <button id="btn-kick-connect" class="btn-secondary" disabled>Connect</button>
+              <span id="kick-status" class="yt-status"></span>
+            </div>
+            <div class="yt-auth-row" style="margin-top:8px">
+              <button id="btn-kick-login" class="btn-secondary">Login</button>
+              <span id="kick-login-status" class="yt-status"></span>
+            </div>
+            <span id="kick-session-status" class="yt-status" style="display:block;margin-top:6px"></span>
+            <div id="kick-cookie-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:none">
+              <div style="font-size:0.8em;color:var(--color-muted);margin-bottom:8px">Dashboard session — paste cookie values from Edge/Chrome (DevTools → Application → Cookies → kick.com). Persists for ~1 month.</div>
+              <label>kick_session <input id="kick-cookie-session" type="password" placeholder="Paste value…" /></label>
+              <label>session_token <input id="kick-cookie-token" type="password" placeholder="Paste value…" /></label>
+              <label>XSRF-TOKEN <input id="kick-cookie-xsrf" type="password" placeholder="Paste value…" /></label>
+              <div class="yt-auth-row" style="margin-top:8px">
+                <button id="btn-kick-inject-cookies" class="btn-secondary">Inject &amp; Reload Dashboard</button>
+                <span id="kick-cookie-status" class="yt-status"></span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>F1 Live Timing</h3>
+            <p class="muted" style="margin-bottom:8px">Login with your F1 account to access live timing data.</p>
+            <div class="yt-auth-row">
+              <button id="btn-f1-login" class="btn-primary">Login</button>
+              <button id="btn-f1-logout" class="btn-secondary" style="display:none">Logout</button>
+              <span id="f1-auth-status" class="yt-status"></span>
+            </div>
+          </div>
+          <div class="settings-section settings-section--wide">
+            <h3>Browser Tabs</h3>
+            <p class="muted" style="margin-bottom:8px">Pinned tabs always show in the sidebar. Click the icon square to pick a brand icon. Drag rows to reorder. Right-click any tab in the sidebar for options.</p>
+            <div id="browser-tab-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Persistent browser sidebar (always visible on the right) -->
+
+    <div id="browser-sidebar">
+      <div id="sidebar-tabs">
+        <!-- icon buttons injected by JS -->
+      </div>
+      <button id="btn-sidebar-add" title="Add temporary tab">+</button>
+    </div>
+
+  </div>
+
+  <!-- Browser context menu -->
+  <div id="browser-ctx-menu" class="ctx-menu">
+    <button data-action="home">↩ Home URL</button>
+    <button data-action="reload">↺ Reload</button>
+    <button data-action="copy-url">⧉ Copy URL</button>
+    <button data-action="devtools">⚙ DevTools</button>
+    <div class="ctx-sep"></div>
+    <button data-action="close" class="ctx-danger">✕ Close tab</button>
+  </div>
+
+  <!-- Stream Details Modal -->
+  <div id="stream-details-backdrop" class="modal-backdrop" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Stream Details</span>
+        <button id="btn-stream-details-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">
+          Title
+          <input id="stream-title-input" type="text" class="setup-input" placeholder="Title…" />
+        </label>
+        <label class="modal-label">
+          YouTube
+          <textarea id="stream-desc-input" class="setup-input setup-desc" placeholder="Description…"></textarea>
+        </label>
+        <label class="modal-label">
+          Twitch
+          <input id="twitch-category-input" type="text" class="setup-input" placeholder="Category…" />
+          <input id="twitch-tags-input" type="text" class="setup-input" placeholder="Tags, comma separated…" />
+        </label>
+        <label class="modal-label">
+          Kick
+          <input id="kick-tags-input" type="text" class="setup-input" placeholder="Tags, comma separated…" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for launcher adding -->
+  <input type="file" id="launcher-file-input" style="display:none" />
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

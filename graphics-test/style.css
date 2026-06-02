@@ -1,0 +1,333 @@
+@import '../shared/fonts/fonts.css';
+
+/* ── Reset ───────────────────────────────────────────────────── */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic
+}
+
+:root {
+  --main-color-red: #FF0000;
+  --main-color-white: #FFFFFF;
+  --main-color-black: #000000;
+
+   
+  --shadow: 4px 4px 5px hsl(0 0 0 / .25);
+}
+body {
+  
+  font-family: Gotham;
+  font-variant-numeric: tabular-nums;
+  color: var(--main-color-white);
+  > * { margin-inline: auto; margin-bottom: 20px}
+}
+
+
+#graphic {
+  /* outline:1px solid hotpink; */
+  width: 1200px;
+  height: 1500px;
+  overflow: hidden;
+  padding: 100px;
+  background-image:
+    linear-gradient(
+      hsl(0 0 0 / .8),
+      hsl(0 0 0 / .3) 10%,
+      hsl(0 0 0 / 0) 50%,
+      hsl(0 0 0 / .3) 90%,
+      hsl(0 0 0 / .8) 
+    );
+  position: relative;
+
+  >.logo {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 40px;
+    filter: drop-shadow(var(--shadow));
+  }
+
+  .layout {
+    display: grid;
+    height: 100%;
+    grid-template-rows: repeat(3, min-content) 1fr;
+    --row-gap: 20px;
+    row-gap: var(--row-gap);
+    > * {
+      grid-column: 1;
+    }
+    .event-name{
+      font-size: 60px;
+      font-weight: 900;
+      text-transform: uppercase;
+      grid-row: 1/2;
+      justify-self: center;
+      text-shadow: var(--shadow);
+    }
+    .session-name{
+      padding: 20px 30px;
+      font-size: 40px;
+      border-radius: 10px;
+      background: var(--session-type-color);
+      text-transform: uppercase;
+      font-weight: 700;
+      grid-row: 2/4;
+      justify-self: center;
+      z-index: 1;
+      box-shadow: var(--shadow);
+    }
+    .content {
+      --border-size: 10px;
+      border: var(--border-size) solid var(--session-type-color);
+      border-radius: 20px;
+      background-color: var(--main-color-black);
+      grid-row: 3/5;
+      
+      margin-top: calc(var(--border-size) * -.5 - var(--row-gap) / 2);
+      padding: 50px;
+      box-shadow: var(--shadow);
+
+      display: grid;
+      gap: 50px;
+      
+      &[data-session="practice"] {
+        grid-template-columns: 1fr max-content;
+        .results {
+          grid-template-columns: min-content 1fr min-content min-content min-content;
+          grid-auto-rows: 1fr;
+          .row{
+            grid-column: 1/-1;
+          }
+        }
+        .highlight {
+          .logo {
+            width: 150%;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+          }
+          .driver {
+            width: 350%;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+          }
+          .number {
+            width: 100%;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+          }
+        }
+      }
+      &[data-session="qualifying"],
+      &[data-session="race"]{
+        grid-template-rows: 1fr max-content;
+        .results {
+          grid-template-columns: repeat(2, max-content 1fr max-content max-content max-content);
+          row-gap: 20px;
+          grid-auto-flow: dense;
+          position: relative;
+          
+          .row.left {
+            grid-column: 1/6;
+            margin-right: 75px;
+          }
+          .row.right {
+            grid-column: -6/-1;
+          }
+        }
+        .highlight {
+          .logo {
+            height: 100%;
+            top: 25px;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+          }
+          .driver {
+            width: 100%;
+            top: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+          }
+          .number {
+            width: 20%;
+            bottom: 25px;
+            right: 0;
+            /* transform: translateX(-50%); */
+          }
+        }
+      }
+
+      .highlight{
+        display: grid;
+        overflow: hidden;  
+        background: 
+          linear-gradient(hsl(0 0 0 / 0), hsl(0 0 0 / 1)),
+          var(--team-color-background);
+        position: relative;
+        
+        .logo {
+          position: absolute;
+        }
+        .driver {
+          position: absolute;
+          
+        }
+        .overlay{
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          background: linear-gradient(hsl(0 0 0 / 0) 75%, hsl(0 0 0 / 1));
+        }
+        .number {
+          position: absolute;
+          
+        }
+        
+      }
+      .results {
+        display: grid;
+        font-family: GothamNarrow;
+        font-weight: 500;
+        font-size: 30px;
+
+        .row {
+          display: grid;
+          grid-template-columns: subgrid;
+          align-items: center;
+          
+          column-gap: 20px;
+
+          .pos {
+            text-align: right;
+            &.dnf{
+              font-size: 10px;
+              text-align: center;
+              background-color: var(--main-color-red);
+              padding: 5px;
+              text-transform: uppercase;
+            }
+          }
+          .name {
+            font-weight: 700;
+            text-transform: uppercase;
+            
+          }
+          .logo {
+            height: 30px;
+            aspect-ratio: 1/1;
+            background: var(--team-color-background);
+            border-radius: 50%;
+            padding: 2px;
+          }
+          .time {
+            text-align: right;
+            border-right: 5px solid var(--tyre-color);
+            padding-right: 10px;
+          }
+          .gap {
+            text-align: right;
+            font-size: 20px;
+          }
+          .points {
+            text-align: right;
+            display: grid;
+            place-items: center;
+            background: var(--session-type-color);
+            height: 100%;
+            font-size: 20px;
+            aspect-ratio: 1/1;
+            &.nopoints{
+              display: none
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+[data-team='redbullracing'] { 
+  --team-color-background: #061A4D;
+  --team-color-text: #FFFFFF;
+}
+[data-team='williams'] { 
+  --team-color-background: #0142FE;
+  --team-color-text: #FFFFFF;
+}
+[data-team='cadillac'] { 
+  --team-color-background: #15151F;
+  --team-color-text: #FFFFFF;
+}
+[data-team='audi'] { 
+  --team-color-background: #6D0507;
+  --team-color-text: #FFFFFF;
+}
+[data-team='alpine'] { 
+  --team-color-background: #E32785;
+  --team-color-text: #FFFFFF;
+}
+[data-team='astonmartin'] { 
+  --team-color-background: #229971;
+  --team-color-text: #FFFFFF;
+}
+[data-team='ferrari'] { 
+  --team-color-background: #DC0000;
+  --team-color-text: #FFFFFF;
+}
+[data-team='haasf1team'] { 
+  --team-color-background: #F8F4F1;
+  --team-color-text: #000000;
+}
+[data-team='mclaren'] { 
+  --team-color-background: #FD8000;
+  --team-color-text: #FFFFFF;
+}
+[data-team='mercedes'] { 
+  --team-color-background: #00F5D3;
+  --team-color-text: #000000;
+}
+[data-team='racingbulls'] { 
+  --team-color-background: #4862E4;
+  --team-color-text: #FFFFFF;
+}
+
+[data-tyre='soft']{
+  --tyre-color: #DA291C;
+}
+[data-tyre='medium']{
+  --tyre-color: #FFD100;
+}
+[data-tyre='hard']{
+  --tyre-color: #F0F0EC;
+}
+[data-tyre="intermediate"]{
+  --tyre-color: #43B02A;
+}
+[data-tyre="wet"]{
+  --tyre-color: #0067AD;
+}
+[data-tyre='unknown']{
+  --tyre-color: #5B5B5B;
+}
+[data-tyre="test"]{
+  --tyre-color: #464646
+}
+
+[data-session-type="practice"]{
+  --session-type-color: #0062B7;
+}
+[data-session-type="sprint"]{
+  --session-type-color: #0C7621;
+}
+[data-session-type="gp"]{
+  --session-type-color: #FF0000;
+}
