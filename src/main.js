@@ -2576,6 +2576,27 @@ http.createServer((req, res) => {
     return
   }
 
+  // Fonts — serve from shared/fonts directory
+  if (req.method === 'GET' && url.pathname.startsWith('/fonts/')) {
+    const filePath = path.join(__dirname, 'shared/fonts', url.pathname.replace('/fonts/', ''))
+    try {
+      const stat = fs.statSync(filePath)
+      if (stat.isFile()) {
+        const ext = path.extname(filePath).toLowerCase()
+        const mimeTypes = { '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.otf': 'font/otf', '.css': 'text/css', '.svg': 'image/svg+xml' }
+        const contentType = mimeTypes[ext] || 'application/octet-stream'
+        res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'public, max-age=31536000', 'Access-Control-Allow-Origin': '*' })
+        res.end(fs.readFileSync(filePath))
+        return
+      }
+    } catch (e) {
+      // File not found
+    }
+    res.writeHead(404)
+    res.end('Not found')
+    return
+  }
+
   // Event tracker — proxy to F1 API, augmented with circuitKey
   if (req.method === 'GET' && url.pathname === '/f1/event-tracker') {
     const CIRCUIT_KEY_BY_SHORT_NAME = {

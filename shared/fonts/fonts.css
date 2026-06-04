@@ -1,0 +1,63 @@
+/* ── Gotham ──────────────────────────────────────────────────── */
+@font-face { font-family: 'Gotham'; font-weight: 100; font-style: normal; src: url('./gotham/Gotham-Thin.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 100; font-style: italic; src: url('./gotham/Gotham-ThinItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 200; font-style: normal; src: url('./gotham/Gotham-XLight.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 200; font-style: italic; src: url('./gotham/Gotham-XLightItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 300; font-style: normal; src: url('./gotham/Gotham-Light.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 300; font-style: italic; src: url('./gotham/Gotham-LightItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 400; font-style: normal; src: url('./gotham/Gotham-Book.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 400; font-style: italic; src: url('./gotham/Gotham-BookItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 500; font-style: normal; src: url('./gotham/Gotham-Medium.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 500; font-style: italic; src: url('./gotham/Gotham-MediumItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 700; font-style: normal; src: url('./gotham/Gotham-Bold.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 700; font-style: italic; src: url('./gotham/Gotham-BoldItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 800; font-style: normal; src: url('./gotham/Gotham-Black.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 800; font-style: italic; src: url('./gotham/Gotham-BlackItalic.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 900; font-style: normal; src: url('./gotham/Gotham-Ultra.woff2'); }
+@font-face { font-family: 'Gotham'; font-weight: 900; font-style: italic; src: url('./gotham/Gotham-UltraItalic.woff2'); }
+
+@font-face { font-family: 'GothamNarrow'; font-weight: 100; font-style: normal; src: url('./gotham/GothamNarrow-Thin.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 100; font-style: italic; src: url('./gotham/GothamNarrow-ThinItalic.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 300; font-style: normal; src: url('./gotham/GothamNarrow-Light.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 300; font-style: italic; src: url('./gotham/GothamNarrow-LightItalic.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 400; font-style: normal; src: url('./gotham/GothamNarrow-Book.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 400; font-style: italic; src: url('./gotham/GothamNarrow-BookItalic.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 500; font-style: normal; src: url('./gotham/GothamNarrow-Medium.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 500; font-style: italic; src: url('./gotham/GothamNarrow-MediumItalic.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 700; font-style: normal; src: url('./gotham/GothamNarrow-Bold.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 700; font-style: italic; src: url('./gotham/GothamNarrow-BoldItalic.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 800; font-style: normal; src: url('./gotham/GothamNarrow-Black.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 800; font-style: italic; src: url('./gotham/GothamNarrow-BlackItalic.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 900; font-style: normal; src: url('./gotham/GothamNarrow-Ultra.woff2'); }
+@font-face { font-family: 'GothamNarrow'; font-weight: 900; font-style: italic; src: url('./gotham/GothamNarrow-UltraItalic.woff2'); }
+
+@font-face { font-family: 'GothamCond'; font-weight: 100; font-style: normal; src: url('./gotham/GothamCond-Thin.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 100; font-style: italic; src: url('./gotham/GothamCond-ThinItalic.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 300; font-style: normal; src: url('./gotham/GothamCond-Light.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 300; font-style: italic; src: url('./gotham/GothamCond-LightItalic.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 500; font-style: normal; src: url('./gotham/GothamCond-Medium.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 500; font-style: italic; src: url('./gotham/GothamCond-MediumItalic.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 700; font-style: normal; src: url('./gotham/GothamCond-Bold.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 700; font-style: italic; src: url('./gotham/GothamCond-BoldItalic.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 800; font-style: normal; src: url('./gotham/GothamCond-Black.woff2'); }
+@font-face { font-family: 'GothamCond'; font-weight: 800; font-style: italic; src: url('./gotham/GothamCond-BlackItalic.woff2'); }
+
+/* ── Formula 1 ───────────────────────────────────────────────── */
+@font-face { font-family: 'Formula1'; font-weight: 400; font-style: normal; src: url('./formula1/Formula1-Regular.woff2'); }
+@font-face { font-family: 'Formula1'; font-weight: 400; font-style: italic; src: url('./formula1/Formula1-Italic.woff2'); }
+@font-face { font-family: 'Formula1'; font-weight: 500; font-style: normal; src: url('./formula1/Formula1-Bold.woff2'); }
+@font-face { font-family: 'Formula1'; font-weight: 900; font-style: normal; src: url('./formula1/Formula1-Black.woff2'); }
+@font-face { font-family: 'Formula1Wide';   font-weight: 500; font-style: normal; src: url('./formula1/Formula1-Wide.woff2'); }
+@font-face { font-family: 'Formula1Digits'; font-weight: 400; font-style: normal; src: url('./formula1/Formula1-Year.woff2'); }
+
+/* ── KH Interference ─────────────────────────────────────────── */
+@font-face { font-family: 'KH Interference';    font-weight: 400; font-style: normal; src: url('./kh-interference/KHInterference-Regular.woff2'); }
+@font-face { font-family: 'KH Interference';    font-weight: 700; font-style: normal; src: url('./kh-interference/KHInterference-Bold.woff2'); }
+@font-face { font-family: 'KH Interference F1'; font-weight: 400; font-style: normal; src: url('./kh-interference-f1/KHInterferenceF1-Regular.woff2'); }
+@font-face { font-family: 'KH Interference F1'; font-weight: 700; font-style: normal; src: url('./kh-interference-f1/KHInterferenceF1-Bold.woff2'); }
+
+/* ── Northwell ───────────────────────────────────────────────── */
+@font-face { font-family: 'Northwell';          font-weight: 400; font-style: normal; src: url('./northwell/northwell.woff2'); }
+@font-face { font-family: 'Northwell Alt';      font-weight: 400; font-style: normal; src: url('./northwell/northwell-alt.woff2'); }
+@font-face { font-family: 'Northwell Clean';    font-weight: 400; font-style: normal; src: url('./northwell/northwell-clean.woff2'); }
+@font-face { font-family: 'Northwell Clean Alt';font-weight: 400; font-style: normal; src: url('./northwell/northwell-clean-alt.woff2'); }

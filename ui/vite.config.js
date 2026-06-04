@@ -11,6 +11,7 @@ export default defineConfig({
       '/auth': 'http://localhost:47200',
       '/f1': 'http://localhost:47200',
       '/tts': 'http://localhost:47200',
+      '/fonts': 'http://localhost:47200',
     },
     historyApiFallback: true,
   },
