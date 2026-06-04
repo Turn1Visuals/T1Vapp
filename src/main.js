@@ -2578,7 +2578,7 @@ http.createServer((req, res) => {
 
   // Fonts — serve from shared/fonts directory
   if (req.method === 'GET' && url.pathname.startsWith('/fonts/')) {
-    const filePath = path.join(__dirname, 'shared/fonts', url.pathname.replace('/fonts/', ''))
+    const filePath = path.join(__dirname, '..', 'shared', 'fonts', url.pathname.replace('/fonts/', ''))
     try {
       const stat = fs.statSync(filePath)
       if (stat.isFile()) {
