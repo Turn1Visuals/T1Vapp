@@ -380,7 +380,7 @@ export default function TrackMap({ layout, layers, trackState = {}, positionFram
         const borderColor = getCompoundBorderStyle(stint?.Compound ?? null, true).color;
 
         const tdLine    = timingDataRef.current?.Lines?.[num];
-        if (tdLine?.KnockedOut === true || tdLine?.Retired === true) continue;
+        if (tdLine?.KnockedOut === true || tdLine?.Retired === true || tdLine?.Stopped === true) continue;
         const inPit     = tdLine?.InPit === true;
         const pitOut    = !inPit && tdLine?.PitOut === true;
         const pos       = tdLine?.Position ?? 999;

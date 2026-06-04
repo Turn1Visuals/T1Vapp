@@ -2471,6 +2471,29 @@ http.createServer((req, res) => {
     return
   }
 
+  // Debug: dump timing data to see driver status fields
+  if (req.method === 'GET' && url.pathname === '/f1/debug/timing') {
+    const snap = f1Playback?.getSnapshot()
+    if (!snap) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+      res.end(JSON.stringify({ error: 'No session loaded' }))
+      return
+    }
+    const timingData = snap.state?.TimingData
+    if (!timingData?.Lines) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+      res.end(JSON.stringify({ error: 'No timing data' }))
+      return
+    }
+    const sample = Object.entries(timingData.Lines).slice(0, 5).reduce((acc, [num, line]) => {
+      acc[num] = line
+      return acc
+    }, {})
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+    res.end(JSON.stringify({ sample, keys: Object.keys(timingData.Lines[Object.keys(timingData.Lines)[0]] || {}) }))
+    return
+  }
+
   // Playback control endpoints — used by debug Controls overlay
   if (req.method === 'POST' && url.pathname === '/f1/play') {
     let body = ''
