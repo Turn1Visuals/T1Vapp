@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('api', {
     startVirtualCam: () => ipcRenderer.invoke('obs:startVirtualCam'),
     stopVirtualCam: () => ipcRenderer.invoke('obs:stopVirtualCam'),
     refreshBrowserSources: () => ipcRenderer.invoke('obs:refreshBrowserSources'),
+    refreshSceneSources: (sceneName) => ipcRenderer.invoke('obs:refreshSceneSources', sceneName),
     getSceneScreenshot: (sceneName) => ipcRenderer.invoke('obs:getSceneScreenshot', sceneName)
   },
   icons: {

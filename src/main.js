@@ -454,6 +454,20 @@ ipcMain.handle('obs:refreshBrowserSources', async () => {
   }
 })
 
+ipcMain.handle('obs:refreshSceneSources', async (_, sceneName) => {
+  try {
+    const { sceneItems } = await obs.call('GetSceneItemList', { sceneName })
+    for (const item of sceneItems) {
+      if (item.inputKind === 'browser_source') {
+        await obs.call('PressInputPropertiesButton', { inputName: item.sourceName, propertyName: 'refreshnocache' })
+      }
+    }
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
 ipcMain.handle('obs:getSceneScreenshot', async (_, sceneName) => {
   try {
     const res = await obs.call('GetSourceScreenshot', {

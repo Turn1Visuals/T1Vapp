@@ -260,9 +260,10 @@ let eyeSvg = '', eyeSlashSvg = '', volumeSvg = '', volumeMuteSvg = ''
       const refreshBtn = document.createElement('button')
       refreshBtn.className = 'obs-scene-refresh-btn'
       refreshBtn.textContent = '↻'
-      refreshBtn.title = 'Refresh preview'
+      refreshBtn.title = 'Refresh sources'
       refreshBtn.addEventListener('click', async e => {
         e.stopPropagation()
+        await window.api.obs.refreshSceneSources(name)
         const res = await window.api.obs.getSceneScreenshot(name)
         if (res.ok) img.src = res.imageData
       })
