@@ -1,0 +1,8 @@
+.wrap  { overflow-y: auto; height: 100%; background: #0d0d0d; }
+.table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.th    { padding: 6px 10px; text-align: left; font-size: 11px; font-weight: 500; color: #555; text-transform: uppercase; border-bottom: 1px solid #222; white-space: nowrap; }
+.row   { border-bottom: 1px solid #1a1a1a; }
+.row:hover { background: #141414; }
+.pos   { padding: 6px 10px; color: #888; width: 32px; white-space: nowrap; vertical-align: middle; }
+.cell  { padding: 6px 10px; color: #aaa; white-space: nowrap; vertical-align: middle; }
+.empty { color: #444; padding: 24px; text-align: center; font-size: 13px; }

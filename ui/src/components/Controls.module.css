@@ -1,0 +1,20 @@
+.wrap { border-bottom: 1px solid #222; }
+.btns { padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn     { background: #222; color: #e0e0e0; border: 1px solid #333; padding: 4px 12px; cursor: pointer; font-family: monospace; font-size: 12px; }
+.primary { background: #1a3a1a; color: #4caf50; border: 1px solid #4caf50; padding: 4px 12px; cursor: pointer; font-family: monospace; font-size: 12px; }
+.btn:hover { background: #333; }
+.primary:hover { background: #224422; }
+.btn:disabled, .primary:disabled { opacity: 0.4; cursor: default; }
+.label  { color: #888; font-size: 12px; display: flex; align-items: center; gap: 4px; }
+.select { background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; padding: 3px; font-family: monospace; }
+.clock   { color: #888; font-size: 12px; margin-left: auto; }
+.livePill { background: #e10600; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 2px; letter-spacing: 0.04em; }
+.btnStop  { background: #2a1a1a; color: #e10600; border: 1px solid #5a2020; padding: 4px 12px; cursor: pointer; font-family: monospace; font-size: 12px; margin-left: auto; }
+.btnStop:hover { background: #3a2020; }
+.progressBg     { margin: 0 12px; background: #1a1a1a; height: 5px; cursor: default; position: relative; user-select: none; }
+.progressActive { cursor: pointer; }
+.progressActive:hover { background: #222; }
+.progressFill   { background: #e10600; height: 100%; pointer-events: none; }
+.progressThumb  { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 13px; height: 13px; border-radius: 50%; background: #e10600; pointer-events: none; transition: transform 0.1s; }
+.progressActive:hover .progressThumb { transform: translate(-50%, -50%) scale(1.3); }
+.progressInfo { display: flex; justify-content: space-between; padding: 3px 12px 6px; color: #555; font-size: 11px; }

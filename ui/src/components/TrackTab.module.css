@@ -1,0 +1,7 @@
+.wrap    { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.toolbar { padding: 6px 10px; font-size: 11px; border-bottom: 1px solid #1a1a1a; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; flex-shrink: 0; }
+.meta    { color: #444; }
+.check   { display: flex; align-items: center; gap: 4px; cursor: pointer; color: #999; accent-color: #e10600; }
+.check input { accent-color: #e10600; }
+.mapWrap { flex: 1; overflow: hidden; }
+.empty   { color: #444; padding: 24px; text-align: center; }

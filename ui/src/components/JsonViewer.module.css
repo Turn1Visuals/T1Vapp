@@ -1,0 +1,15 @@
+.root  { padding: 10px; font-size: 11px; line-height: 1.6; font-family: monospace; color: #aaa; }
+.block { padding-left: 16px; border-left: 1px solid #222; margin-left: 2px; }
+.row   { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px; }
+.key       { color: #7c9cbf; }
+.keyToggle { cursor: pointer; }
+.keyToggle:hover { color: #aac8e8; }
+.str       { color: #98c379; word-break: break-all; }
+.num       { color: #d19a66; }
+.bool      { color: #c678dd; }
+.null      { color: #5c6370; }
+.bracket   { color: #666; }
+.comma     { color: #666; }
+.collapsed { color: #666; cursor: pointer; }
+.collapsed:hover { color: #aaa; }
+.ellipsis  { color: #555; font-style: italic; padding: 0 2px; }

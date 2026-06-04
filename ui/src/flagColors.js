@@ -1,0 +1,15 @@
+export const FLAG_COLORS = {
+  'YELLOW':             '#FFD600',
+  'DOUBLE YELLOW':      '#FF8C00',
+  'DOUBLE_YELLOW':      '#FF8C00',
+  'RED':                '#FF1744',
+  'GREEN':              '#00C853',
+  'BLUE':               '#1E88E5',
+  'SAFETY CAR':         '#FF9100',
+  'VIRTUAL SAFETY CAR': '#FF9100',
+  'CHEQUERED':          '#ffffff',
+  'WHITE':              '#ffffff',
+  'BLACK AND WHITE':    '#aaaaaa',
+  'PINK':               '#FF69B4',
+  'BLACK AND ORANGE':   '#FF6B00',
+};
