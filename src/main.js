@@ -2697,6 +2697,16 @@ http.createServer((req, res) => {
     return
   }
 
+  // Serve project assets (images only, let dist assets through)
+  if (url.pathname.startsWith('/assets/') && (url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.jpeg') || url.pathname.endsWith('.gif') || url.pathname.endsWith('.svg'))) {
+    const file = path.join(__dirname, '..', 'assets', url.pathname.slice('/assets/'.length))
+    if (fs.existsSync(file)) {
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream' })
+      res.end(fs.readFileSync(file))
+      return
+    }
+  }
+
   // Serve overlay static files — SPA fallback to index.html
   const rel  = url.pathname === '/' ? 'index.html' : url.pathname.slice(1)
   const file = path.join(OVERLAY_DIST, rel)

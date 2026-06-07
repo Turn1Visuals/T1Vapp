@@ -1,0 +1,21 @@
+.commentator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 200px;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  z-index: 100;
+}
+
+.commentator.visible {
+  opacity: 1;
+}
+
+.commentator img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

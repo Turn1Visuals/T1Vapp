@@ -1,5 +1,6 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { isOnHotLap, parseTime } from '../../qualifyingUtils';
+import Commentator from './Commentator';
 
 // Fixed phrases — pre-generated on mount via /tts/warmup
 const FIXED_PHRASES = [
@@ -20,14 +21,21 @@ const FIXED_PHRASES = [
 const DEDUP_MS = 10_000; // ignore same key within this window
 
 export default function AudioWidget({ state }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   // ── Queue ────────────────────────────────────────────────────────────────────
   const queueRef    = useRef([]);
   const playingRef  = useRef(false);
   const dedupRef    = useRef(new Map()); // key → last enqueue time
 
   const processQueue = useCallback(() => {
-    if (!queueRef.current.length) { playingRef.current = false; return; }
+    if (!queueRef.current.length) {
+      playingRef.current = false;
+      setIsPlaying(false);
+      return;
+    }
     playingRef.current = true;
+    setIsPlaying(true);
     const text  = queueRef.current.shift();
     const audio = new Audio(`/tts?text=${encodeURIComponent(text)}`);
     audio.onended = processQueue;
@@ -254,5 +262,5 @@ export default function AudioWidget({ state }) {
 
   }, [state, enqueue]);
 
-  return null;
+  return <Commentator isPlaying={isPlaying} />;
 }
