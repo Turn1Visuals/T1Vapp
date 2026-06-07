@@ -241,7 +241,6 @@ function OverlayContent() {
         display: 'grid', gridTemplateRows: 'auto 1fr',
         '--session-color': getSessionColor(effectiveState),
       }}>
-        <Commentator />
         {circuitKey && (
           <img src={`/circuits/${circuitKey}.jpg`} alt=""
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35, zIndex: -1 }}
@@ -287,13 +286,16 @@ function OverlayContent() {
 
           </div>
 
-          {/* Col 3 — race control (400px fixed) */}
-          <div style={{ flexShrink: 0, width: 250, display: 'flex', flexDirection: 'column', overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none' }}>
+          {/* Col 3 — race control + commentator (400px fixed) */}
+          <div style={{ flexShrink: 0, width: 250, display: 'flex', flexDirection: 'column', overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none', position: 'relative' }}>
 
             {/* Race control (fills) */}
             <div style={{ flex: 1, padding: 12, overflow: 'hidden auto', outline: debug ? '1px solid #4499ff' : 'none' }}>
               <RaceControlWidget state={state} />
             </div>
+
+            {/* Commentator (bottom-right) */}
+            <Commentator />
 
           </div>
 

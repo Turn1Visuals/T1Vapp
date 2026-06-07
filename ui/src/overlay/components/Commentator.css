@@ -1,8 +1,8 @@
 .commentator {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 200px;
+  bottom: 0;
+  right: 0;
+  width: 100%;
   height: auto;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
@@ -18,6 +18,4 @@
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }

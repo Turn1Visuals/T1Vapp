@@ -289,7 +289,7 @@ export function AudioProvider({ children }) {
 
     const playNext = () => {
       setQueue(q => q.slice(1));
-      setIsPlaying(false);
+      setTimeout(() => setIsPlaying(false), 2000);
     };
 
     audio.onended = playNext;
