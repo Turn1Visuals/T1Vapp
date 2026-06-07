@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useAudioState } from './AudioWidget';
 import './Commentator.css';
 
-export default function Commentator({ isPlaying }) {
+export default function Commentator() {
+  const isPlaying = useAudioState();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

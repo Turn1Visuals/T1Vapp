@@ -1,11 +1,13 @@
 .commentator {
-  position: fixed;
+  position: absolute;
   bottom: 20px;
   right: 20px;
   width: 200px;
+  height: auto;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
   z-index: 100;
+  pointer-events: none;
 }
 
 .commentator.visible {

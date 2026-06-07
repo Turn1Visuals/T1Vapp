@@ -1,6 +1,7 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState, createContext, useContext } from 'react';
 import { isOnHotLap, parseTime } from '../../qualifyingUtils';
-import Commentator from './Commentator';
+
+export const AudioContext = createContext();
 
 // Fixed phrases — pre-generated on mount via /tts/warmup
 const FIXED_PHRASES = [
@@ -22,35 +23,42 @@ const DEDUP_MS = 10_000; // ignore same key within this window
 
 export default function AudioWidget({ state }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [queue, setQueue] = useState([]);
 
   // ── Queue ────────────────────────────────────────────────────────────────────
-  const queueRef    = useRef([]);
-  const playingRef  = useRef(false);
   const dedupRef    = useRef(new Map()); // key → last enqueue time
 
-  const processQueue = useCallback(() => {
-    if (!queueRef.current.length) {
-      playingRef.current = false;
-      setIsPlaying(false);
-      return;
-    }
-    playingRef.current = true;
+  useEffect(() => {
+    if (!queue.length || isPlaying) return;
+
+    const text = queue[0];
+    console.log('[audio] Playing:', text);
     setIsPlaying(true);
-    const text  = queueRef.current.shift();
     const audio = new Audio(`/tts?text=${encodeURIComponent(text)}`);
-    audio.onended = processQueue;
-    audio.onerror = () => { console.warn('[audio] TTS error, skipping'); processQueue(); };
-    audio.play().catch(() => processQueue());
-  }, []);
+
+    const playNext = () => {
+      setQueue(q => q.slice(1));
+      setIsPlaying(false);
+    };
+
+    audio.onended = playNext;
+    audio.onerror = () => {
+      console.warn('[audio] TTS error, skipping');
+      playNext();
+    };
+    audio.play().catch(() => {
+      console.warn('[audio] Play failed');
+      playNext();
+    });
+  }, [queue, isPlaying]);
 
   const enqueue = useCallback((key, text) => {
     const now  = Date.now();
     const last = dedupRef.current.get(key) ?? 0;
     if (now - last < DEDUP_MS) return;
     dedupRef.current.set(key, now);
-    queueRef.current.push(text);
-    if (!playingRef.current) processQueue();
-  }, [processQueue]);
+    setQueue(q => [...q, text]);
+  }, []);
 
   // ── Warmup ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -262,5 +270,60 @@ export default function AudioWidget({ state }) {
 
   }, [state, enqueue]);
 
-  return <Commentator isPlaying={isPlaying} />;
+  // Provider is wrapped around overlay at higher level, just track state here
+  return null;
+}
+
+export function AudioProvider({ children }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [queue, setQueue] = useState([]);
+  const dedupRef = useRef(new Map());
+
+  useEffect(() => {
+    if (!queue.length || isPlaying) return;
+
+    const text = queue[0];
+    console.log('[audio] Playing:', text);
+    setIsPlaying(true);
+    const audio = new Audio(`/tts?text=${encodeURIComponent(text)}`);
+
+    const playNext = () => {
+      setQueue(q => q.slice(1));
+      setIsPlaying(false);
+    };
+
+    audio.onended = playNext;
+    audio.onerror = () => {
+      console.warn('[audio] TTS error, skipping');
+      playNext();
+    };
+    audio.play().catch(() => {
+      console.warn('[audio] Play failed');
+      playNext();
+    });
+  }, [queue, isPlaying]);
+
+  const enqueue = useCallback((key, text) => {
+    const now = Date.now();
+    const last = dedupRef.current.get(key) ?? 0;
+    if (now - last < DEDUP_MS) return;
+    dedupRef.current.set(key, now);
+    setQueue(q => [...q, text]);
+  }, []);
+
+  return (
+    <AudioContext.Provider value={{ isPlaying, enqueue }}>
+      {children}
+    </AudioContext.Provider>
+  );
+}
+
+export function useAudioState() {
+  const context = useContext(AudioContext);
+  return context?.isPlaying ?? false;
+}
+
+export function useEnqueueAudio() {
+  const context = useContext(AudioContext);
+  return context?.enqueue ?? (() => {});
 }
