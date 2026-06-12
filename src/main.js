@@ -32,7 +32,8 @@ function loadConfig() {
       obs: { host: 'localhost', port: 4455, password: '' },
       overlayUrl: 'http://localhost:5173/',
       browserTabs: [],
-      windowBounds: { width: 1280, height: 800 }
+      windowBounds: { width: 1280, height: 800 },
+      overlayMessage: { text: '', visible: false }
     }
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(defaults, null, 2))
     return defaults
@@ -263,6 +264,18 @@ ipcMain.handle('config:save', (_, config) => {
   return true
 })
 
+ipcMain.handle('overlayMessage:load', () => {
+  const config = loadConfig()
+  return config.overlayMessage || { text: '', visible: false }
+})
+
+ipcMain.handle('overlayMessage:save', (_, message) => {
+  const config = loadConfig()
+  config.overlayMessage = message
+  saveConfig(config)
+  return true
+})
+
 ipcMain.handle('launcher:run', (_, launcherPath) => {
   const ext = path.extname(launcherPath).toLowerCase()
   if (ext === '.bat' || ext === '.cmd') {
@@ -298,6 +311,15 @@ ipcMain.handle('obs:disconnect', async () => {
   try { await obs.disconnect() } catch {}
   obsConnected = false
   return { ok: true }
+})
+
+ipcMain.handle('obs:call', async (event, method, params) => {
+  try {
+    const result = await obs.call(method, params)
+    return result
+  } catch (e) {
+    throw new Error(e.message)
+  }
 })
 
 ipcMain.handle('obs:startStream', async () => {

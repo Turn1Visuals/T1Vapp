@@ -537,4 +537,84 @@ export function initHomeStreams() {
     pollViewers()
     setInterval(pollViewers, 30000)
   }, 3000)
+
+  // ── Overlay message (OBS text source) ──
+  const overlayMsgInput = document.getElementById('overlay-msg-input')
+  const btnSendMsg = document.getElementById('btn-overlay-msg-send')
+  const btnToggleMsg = document.getElementById('btn-overlay-msg-toggle')
+  const btnClearMsg = document.getElementById('btn-overlay-msg-clear')
+  let overlayMsgVisible = false
+
+  // Load saved message on startup
+  window.api.overlayMessage.load().then(saved => {
+    overlayMsgInput.value = saved.text
+    overlayMsgVisible = saved.visible
+    if (overlayMsgVisible) {
+      btnToggleMsg.textContent = 'Hide'
+      btnToggleMsg.classList.add('btn-start')
+      btnToggleMsg.classList.remove('btn-stop')
+    }
+  }).catch(() => {})
+
+  async function saveMessage() {
+    await window.api.overlayMessage.save({ text: overlayMsgInput.value.trim(), visible: overlayMsgVisible })
+  }
+
+  // Send button: updates the message text in OBS
+  btnSendMsg.addEventListener('click', async () => {
+    const text = overlayMsgInput.value.trim()
+    if (!text) return
+
+    try {
+      await window.api.obs.call('SetInputSettings', {
+        inputName: 'OverlayMessage',
+        inputSettings: { text }
+      })
+      overlayMsgVisible = true
+      btnToggleMsg.textContent = 'Hide'
+      btnToggleMsg.classList.add('btn-start')
+      btnToggleMsg.classList.remove('btn-stop')
+      await saveMessage()
+    } catch (e) {
+      console.error('[overlay message]', e.message)
+    }
+  })
+
+  // Toggle button: shows/hides the current message
+  btnToggleMsg.addEventListener('click', async () => {
+    overlayMsgVisible = !overlayMsgVisible
+    const text = overlayMsgVisible ? overlayMsgInput.value.trim() : ''
+
+    try {
+      await window.api.obs.call('SetInputSettings', {
+        inputName: 'OverlayMessage',
+        inputSettings: { text }
+      })
+      btnToggleMsg.textContent = overlayMsgVisible ? 'Hide' : 'Show'
+      btnToggleMsg.classList.toggle('btn-start', overlayMsgVisible)
+      btnToggleMsg.classList.toggle('btn-stop', !overlayMsgVisible)
+      await saveMessage()
+    } catch (e) {
+      console.error('[overlay message]', e.message)
+    }
+  })
+
+  // Clear button: clears the input and hides the message
+  btnClearMsg.addEventListener('click', async () => {
+    overlayMsgInput.value = ''
+    overlayMsgVisible = false
+    btnToggleMsg.textContent = 'Show'
+    btnToggleMsg.classList.remove('btn-start')
+    btnToggleMsg.classList.add('btn-stop')
+
+    try {
+      await window.api.obs.call('SetInputSettings', {
+        inputName: 'OverlayMessage',
+        inputSettings: { text: '' }
+      })
+      await saveMessage()
+    } catch (e) {
+      console.error('[overlay message]', e.message)
+    }
+  })
 }

@@ -4,6 +4,7 @@
   "description": "T1V central dashboard for F1 content workflow",
   "main": "src/main.js",
   "scripts": {
+    "dev": "concurrently \"cd ui && npm run dev\" \"npm start\"",
     "start": "node launch.js",
     "build:overlay": "cd ui && npm run build",
     "build": "npm run build:overlay && electron-builder --win --x64"

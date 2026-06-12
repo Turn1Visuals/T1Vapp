@@ -5,6 +5,10 @@ contextBridge.exposeInMainWorld('api', {
     load: () => ipcRenderer.invoke('config:load'),
     save: (config) => ipcRenderer.invoke('config:save', config)
   },
+  overlayMessage: {
+    load: () => ipcRenderer.invoke('overlayMessage:load'),
+    save: (message) => ipcRenderer.invoke('overlayMessage:save', message)
+  },
   launcher: {
     run: (path) => ipcRenderer.invoke('launcher:run', path),
     getIcon: (path) => ipcRenderer.invoke('launcher:getIcon', path)
@@ -21,6 +25,7 @@ contextBridge.exposeInMainWorld('api', {
   obs: {
     connect: () => ipcRenderer.invoke('obs:connect'),
     disconnect: () => ipcRenderer.invoke('obs:disconnect'),
+    call: (method, params) => ipcRenderer.invoke('obs:call', method, params),
     startStream: () => ipcRenderer.invoke('obs:startStream'),
     stopStream: () => ipcRenderer.invoke('obs:stopStream'),
     getStatus: () => ipcRenderer.invoke('obs:getStatus'),
