@@ -96,19 +96,13 @@ export default function OverlayStart() {
     ? `Round ${si.Meeting.Number}`
     : (liveMeta?.roundText ?? '');
 
-  const sessionLabel = useF1Live && si?.Name ? si.Name : null;
-
-  const circuitKey = useF1Live ? (si?.Meeting?.Circuit?.Key ?? liveMeta?.circuitKey) : liveMeta?.circuitKey ?? null;
+  const nextSession = findNextSession(sessions, Date.now());
+  const circuitKey = liveMeta?.circuitKey ?? null;
   const bgUrl = circuitKey ? `/circuits/${circuitKey}.jpg` : null;
 
-  const trackSvgUrl = isPlayback
-    ? buildTrackSvgUrl(si)
-    : buildTrackSvgUrlFromPublicId(liveMeta?.trackImageId);
+  const trackSvgUrl = buildTrackSvgUrlFromPublicId(liveMeta?.trackImageId);
 
-  const nextSession = findNextSession(sessions, Date.now());
-  const color = isPlayback && si?.Name
-    ? getSessionColorFromLabel(si.Name)
-    : getSessionColorFromLabel(nextSession?.label);
+  const color = getSessionColorFromLabel(nextSession?.label);
 
   return (
     <div className="overlay-root" style={{
@@ -152,14 +146,14 @@ export default function OverlayStart() {
               </div>
             )}
 
-            {(sessionLabel || nextSession?.label) && (
+            {nextSession?.label && (
               <div style={{
                 background: color, color: '#fff',
                 padding: '6px 24px', fontWeight: 700,
                 fontSize: '1em', letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}>
-                {sessionLabel ?? nextSession?.label}
+                {nextSession.label}
               </div>
             )}
           </div>
