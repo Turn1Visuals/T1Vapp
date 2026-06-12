@@ -418,10 +418,11 @@ export function initLiveTiming() {
     for (const { num, t, d } of rows) {
       const row = document.createElement('div')
       row.className = 'lt-driver-row'
-      row.style.borderLeft = `3px solid #${d.TeamColour || '555'}`
+      const teamColor = getTeamColor(num, d.TeamColour)
+      row.style.borderLeft = `3px solid #${teamColor}`
       row.innerHTML = `
         <span class="lt-driver-pos">${t.Position ?? '—'}</span>
-        <span class="lt-driver-num" style="color:#${d.TeamColour||'aaa'}">${num}</span>
+        <span class="lt-driver-num" style="color:#${teamColor}">${num}</span>
         <span class="lt-driver-name">${d.LastName ?? d.FullName ?? '—'}</span>
         <span class="lt-driver-gap">${t.GapToLeader || t.IntervalToPositionAhead?.Value || ''}</span>
         <span class="lt-driver-last">${t.LastLapTime?.Value || '—'}</span>
@@ -458,6 +459,19 @@ export function initLiveTiming() {
   const mappingResetBtn  = document.getElementById('lt-mapping-reset')
   let driverMapping = {}
   let currentDrivers = {}
+
+  const TEAM_COLORS = {
+    'Red Bull Racing': 'FF0000', 'Williams': '0142FE', 'Cadillac': '15151F',
+    'Audi': '6D0507', 'Alpine': 'E32785', 'Aston Martin': '229971',
+    'Ferrari': 'DC0000', 'Haas F1 Team': 'F8F4F1', 'Kick Sauber': '52E252',
+    'McLaren': 'FD8000', 'Mercedes': '00F5D3', 'Racing Bulls': '4862E4', 'RB': '4862E4'
+  }
+
+  function getTeamColor(driverNum, apiTeamColor) {
+    if (apiTeamColor) return apiTeamColor
+    const teamName = driverMapping[driverNum]
+    return teamName ? (TEAM_COLORS[teamName] || '555') : '555'
+  }
 
   async function loadDriverMapping() {
     driverMapping = await window.api.driverMapping.load()

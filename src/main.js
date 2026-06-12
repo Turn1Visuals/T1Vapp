@@ -294,6 +294,17 @@ function getDriverMappingPath() {
   return path.join(userDataPath, 'driverMapping.json')
 }
 
+function loadDriverMapping() {
+  const mappingPath = getDriverMappingPath()
+  if (!fs.existsSync(mappingPath)) return {}
+  try {
+    return JSON.parse(fs.readFileSync(mappingPath, 'utf8'))
+  } catch (e) {
+    console.warn('[Driver Mapping] Failed to load:', e.message)
+    return {}
+  }
+}
+
 ipcMain.handle('driverMapping:load', () => {
   const mappingPath = getDriverMappingPath()
   if (!fs.existsSync(mappingPath)) {
@@ -2089,7 +2100,8 @@ app.whenReady().then(async () => {
       await startLiveFeed(f1Playback)
     } else if (saved.path !== 'live') {
       console.log(`[f1] restoring playback: ${saved.path} @ ${saved.offsetMs}ms`)
-      const { timeline, streamStartUnix } = await loadSession(saved.path)
+      const driverMapping = loadDriverMapping()
+      const { timeline, streamStartUnix } = await loadSession(saved.path, driverMapping)
       f1Playback   = new Playback(timeline, streamStartUnix)
       f1LoadedPath = saved.path
       await f1Playback.seek(saved.offsetMs)
@@ -2207,7 +2219,8 @@ ipcMain.handle('f1:sessions', async (_, year) => {
 ipcMain.handle('f1:load', async (_, sessionPath) => {
   // Disconnect live feed first so it doesn't override playback
   if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null; f1LiveConnected = false }
-  const { timeline, streamStartUnix } = await loadSession(sessionPath)
+  const driverMapping = loadDriverMapping()
+  const { timeline, streamStartUnix } = await loadSession(sessionPath, driverMapping)
   f1Playback   = new Playback(timeline, streamStartUnix)
   f1LoadedPath = sessionPath
   f1SaveState()

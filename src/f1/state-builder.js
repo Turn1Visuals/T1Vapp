@@ -31,12 +31,19 @@ function getFallbackDriverList() {
   return fallbackDriverList;
 }
 
-function applyDriverListFallback(driverList) {
+function applyDriverListFallback(driverList, driverMapping = {}) {
   const fallback = getFallbackDriverList();
   if (!driverList || typeof driverList !== 'object') return driverList;
 
   for (const [racingNumber, driver] of Object.entries(driverList)) {
     if (!driver || typeof driver !== 'object') continue;
+
+    // Apply driver mapping fallback (from AppData)
+    if (!driver.TeamName && driverMapping[racingNumber]) {
+      driver.TeamName = driverMapping[racingNumber];
+    }
+
+    // Apply file-based fallback
     const fallbackDriver = fallback[racingNumber];
     if (!fallbackDriver) continue;
 
@@ -102,7 +109,7 @@ async function fetchTopic(sessionPath, topic) {
   }
 }
 
-async function loadSession(sessionPath) {
+async function loadSession(sessionPath, driverMapping = {}) {
   let timeline;
 
   if (isCached(sessionPath)) {
@@ -143,7 +150,7 @@ async function loadSession(sessionPath) {
 
   // Apply fallback to fill missing DriverList fields
   if (state.DriverList) {
-    state.DriverList = applyDriverListFallback(state.DriverList);
+    state.DriverList = applyDriverListFallback(state.DriverList, driverMapping);
   }
 
   console.log(`Session ready — ${timeline.length} events`);
