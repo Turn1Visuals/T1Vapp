@@ -476,6 +476,7 @@ export function initLiveTiming() {
 
     mappingGridEl.innerHTML = ''
     Object.entries(currentDrivers)
+      .filter(([num, driver]) => /^\d+$/.test(num) && (driver.LastName || driver.FullName))
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .forEach(([num, driver]) => {
         const row = document.createElement('div')
