@@ -270,13 +270,13 @@ function OverlayContent() {
           {/* Col 2 — track map + session widgets (fills remaining) */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none' }}>
 
-            {/* Track map (flex 5) */}
-            <div style={{ flex: 5, padding: 12, overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none' }}>
+            {/* Track map (auto height, max 65%) */}
+            <div style={{ flexShrink: 0, maxHeight: '65%', padding: 12, overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none' }}>
               <TrackMapOverlay state={state} clock={clock} positionFrames={positionFrames} />
             </div>
 
-            {/* Session widgets (flex 3) */}
-            <div style={{ flex: 3, padding: 12, overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none' }}>
+            {/* Session widgets (flex 1, fills remaining) */}
+            <div style={{ flex: 1, padding: 12, overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none' }}>
               <div style={{ position: 'relative', height: '100%' }}>
                 <PracticeWidget state={state} />
                 <QualifyingLapWidget state={state} />
