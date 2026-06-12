@@ -5,6 +5,18 @@ import { getSessionRemaining, formatSessionClock, formatVenueTime } from '../../
 import Logo from '../Logo.jsx';
 import SessionCountdown from './SessionCountdown.jsx';
 
+const ACTIVE_STATUSES = new Set(['Started', 'Aborted']);
+
+function isSessionActive(state) {
+  return ACTIVE_STATUSES.has(state?.SessionStatus?.Status ?? '');
+}
+
+function isBetweenQualParts(state) {
+  if (state?.SessionInfo?.Type !== 'Qualifying') return false;
+  const timing = state?.TimingData?.Lines ?? {};
+  return Object.values(timing).some(line => line.KnockedOut);
+}
+
 function Divider() {
   return <span style={{ width: 1, height: '1.2em', background: 'rgba(255,255,255,0.6)', flexShrink: 0 }} />;
 }
@@ -18,20 +30,6 @@ function LocalTime({ state, clock }) {
   const time = formatVenueTime(clock?.trackTime ?? Date.now(), state?.SessionInfo?.GmtOffset);
   if (time === '—') return null;
   return <span>{time.slice(0, 5)}</span>;
-}
-
-const ACTIVE_STATUSES = new Set(['Started', 'Aborted']);
-
-function isSessionActive(state) {
-  return ACTIVE_STATUSES.has(state?.SessionStatus?.Status ?? '');
-}
-
-function isBetweenQualParts(state) {
-  // True when at least one qualifying part has already finished (someone is knocked out)
-  // This is more reliable than SessionPart which can be set before Q1 clock even starts
-  if (state?.SessionInfo?.Type !== 'Qualifying') return false;
-  const timing = state?.TimingData?.Lines ?? {};
-  return Object.values(timing).some(line => line.KnockedOut);
 }
 
 export default function Header({ state, clock, status, sessions = [] }) {

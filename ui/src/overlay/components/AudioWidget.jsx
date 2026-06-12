@@ -12,6 +12,8 @@ const FIXED_PHRASES = [
   'Virtual safety car ending.',
   'Red flag!',
   'Aborted start!',
+  'FP1 is underway!', 'FP2 is underway!', 'FP3 is underway!',
+  'FP1 has resumed.', 'FP2 has resumed.', 'FP3 has resumed.',
   'Q1 is underway!', 'Q2 is underway!', 'Q3 is underway!',
   'Q1 has resumed.', 'Q2 has resumed.', 'Q3 has resumed.',
   'SQ1 is underway!', 'SQ2 is underway!', 'SQ3 is underway!',

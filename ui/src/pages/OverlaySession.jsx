@@ -65,6 +65,7 @@ function OverlayContent() {
 
     const isRace       = si?.SessionEvent === 'race';
     const isQual       = si?.Type === 'Qualifying';
+    const isPractice   = si?.Type === 'Practice';
     const isSprintQual = isQual && si?.Name === 'Sprint Qualifying';
     const isSprint     = isRace && si?.Name === 'Sprint';
     const raceName     = () => {
@@ -101,6 +102,14 @@ function OverlayContent() {
       if (status === 'Started') {
         if (isRace) {
           enqueue('lights-out', "It's lights out, and away we go!");
+        } else if (isPractice) {
+          const num     = part ?? 1;
+          const label   = `FP${num}`;
+          const partKey = `FP${num}`;
+          const resumed = announcedQualParts.current.has(partKey);
+          const text    = resumed ? `${label} has resumed.` : `${label} is underway!`;
+          announcedQualParts.current.add(partKey);
+          enqueue(`practice-started-${partKey}`, text);
         } else if (isQual) {
           const prefix  = isSprintQual ? 'SQ' : 'Q';
           const num     = part ?? 1;
