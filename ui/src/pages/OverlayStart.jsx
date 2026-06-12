@@ -81,30 +81,24 @@ export default function OverlayStart() {
   const si         = state?.SessionInfo;
 
   // Check if F1 Live data is stale by comparing session date with today
-  const isF1LiveStale = () => {
-    if (!si?.StartDate || status?.live === false) return false; // Use F1 Live if in playback mode
-    const sessionDate = si.StartDate.split('T')[0]; // Extract YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0];
-    return sessionDate !== today;
-  };
+  const isF1LiveStale = si?.StartDate && !isPlayback ? (si.StartDate.split('T')[0] !== new Date().toISOString().split('T')[0]) : false;
+  const useF1Live = si && !isF1LiveStale;
 
-  const useScheduleData = isF1LiveStale();
-
-  const meetingName = (isPlayback || useScheduleData) && si?.Meeting?.Name
+  const meetingName = useF1Live && si?.Meeting?.Name
     ? si.Meeting.Name.replace('Grand Prix', 'GP')
     : liveMeta?.meetingName ?? '';
 
-  const meetingLocation = (isPlayback || useScheduleData)
+  const meetingLocation = useF1Live
     ? (si?.Meeting?.Country?.Name ?? si?.Meeting?.Location ?? '')
     : (liveMeta?.meetingLocation ?? '');
 
-  const roundText = (isPlayback || useScheduleData) && si?.Meeting?.Number
+  const roundText = useF1Live && si?.Meeting?.Number
     ? `Round ${si.Meeting.Number}`
     : (liveMeta?.roundText ?? '');
 
-  const sessionLabel = (isPlayback || useScheduleData) && si?.Name ? si.Name : null;
+  const sessionLabel = useF1Live && si?.Name ? si.Name : null;
 
-  const circuitKey = useScheduleData ? liveMeta?.circuitKey : (si?.Meeting?.Circuit?.Key ?? liveMeta?.circuitKey ?? null);
+  const circuitKey = useF1Live ? (si?.Meeting?.Circuit?.Key ?? liveMeta?.circuitKey) : liveMeta?.circuitKey ?? null;
   const bgUrl = circuitKey ? `/circuits/${circuitKey}.jpg` : null;
 
   const trackSvgUrl = isPlayback
