@@ -371,7 +371,7 @@ export default function TrackMap({ layout, layers, trackState = {}, positionFram
         if (!driver) continue; // skip non-driver entries (SC, medical car, etc.)
         const teamStyle = TEAM_STYLES[driver?.TeamName];
         const color     = teamStyle?.background ?? (driver.TeamColour ? `#${driver.TeamColour}` : '#ffffff');
-        const textColor = teamStyle?.text ?? '#ffffff';
+        const textColor = teamStyle?.text ?? (teamStyle ? '#ffffff' : '#000000');
         const tla       = driver.Tla ?? num;
 
         const appLine     = timingAppDataRef.current?.Lines?.[num];
