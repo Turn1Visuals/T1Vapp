@@ -79,10 +79,10 @@ export default function OverlayStart() {
 
   const isPlayback = status?.loaded && !status?.live;
   const si         = state?.SessionInfo;
-  const sessionStatus = state?.SessionStatus?.Status ?? null;
 
-  // If F1 Live session is Finished, use schedule data (countdown to next venue)
-  const useF1Live = si && sessionStatus !== 'Finished';
+  // If F1 Live session date doesn't match today, it's stale — use schedule data instead
+  const isF1LiveStale = si?.StartDate ? (si.StartDate.split('T')[0] !== new Date().toISOString().split('T')[0]) : false;
+  const useF1Live = si && !isF1LiveStale;
 
   const meetingName = useF1Live && si?.Meeting?.Name
     ? si.Meeting.Name.replace('Grand Prix', 'GP')
