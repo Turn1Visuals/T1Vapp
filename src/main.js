@@ -2699,7 +2699,9 @@ http.createServer((req, res) => {
 
   // Serve project assets (images only, let dist assets through)
   if (url.pathname.startsWith('/assets/') && (url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.jpeg') || url.pathname.endsWith('.gif') || url.pathname.endsWith('.svg'))) {
-    const file = path.join(__dirname, '..', 'assets', url.pathname.slice('/assets/'.length))
+    const filename = url.pathname.slice('/assets/'.length)
+    const appPath = app.getAppPath()
+    const file = path.join(appPath, 'assets', filename)
     if (fs.existsSync(file)) {
       res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream' })
       res.end(fs.readFileSync(file))

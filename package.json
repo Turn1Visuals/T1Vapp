@@ -30,6 +30,7 @@
     "files": [
       "src/**/*",
       "ui/dist/**/*",
+      "assets/**/*",
       "launch.js",
       "package.json"
     ],
