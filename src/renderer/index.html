@@ -412,6 +412,7 @@
 
             <div class="lt-tabs">
               <button class="lt-tab active" data-ltview="drivers">Drivers</button>
+              <button class="lt-tab" data-ltview="mapping">Driver Mapping</button>
               <button class="lt-tab" data-ltview="state">State</button>
               <button class="lt-tab" data-ltview="events">Events</button>
               <button class="lt-tab" data-ltview="file">File</button>
@@ -429,6 +430,14 @@
               </div>
               <div id="lt-view-drivers" class="lt-view active">
                 <div id="lt-drivers" class="lt-drivers"></div>
+              </div>
+              <div id="lt-view-mapping" class="lt-view">
+                <div class="lt-mapping-toolbar">
+                  <button id="lt-mapping-save" class="btn-primary" style="font-size:12px">Save Mapping</button>
+                  <button id="lt-mapping-reset" class="btn-ghost" style="font-size:12px">Reset All</button>
+                  <span id="lt-mapping-status" class="muted" style="font-size:11px"></span>
+                </div>
+                <div id="lt-mapping-grid" class="lt-mapping-grid"></div>
               </div>
               <div id="lt-view-state" class="lt-view">
                 <pre id="lt-raw-state" class="lt-raw-pre"></pre>

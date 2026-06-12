@@ -288,6 +288,36 @@ ipcMain.handle('launcher:run', (_, launcherPath) => {
   return true
 })
 
+// ── Driver Mapping handlers ──────────────────────────────────────────────────
+function getDriverMappingPath() {
+  const userDataPath = app.getPath('userData')
+  return path.join(userDataPath, 'driverMapping.json')
+}
+
+ipcMain.handle('driverMapping:load', () => {
+  const mappingPath = getDriverMappingPath()
+  if (!fs.existsSync(mappingPath)) {
+    return {}
+  }
+  try {
+    return JSON.parse(fs.readFileSync(mappingPath, 'utf8'))
+  } catch (e) {
+    console.warn('[Driver Mapping] Failed to load:', e.message)
+    return {}
+  }
+})
+
+ipcMain.handle('driverMapping:save', (_, mapping) => {
+  const mappingPath = getDriverMappingPath()
+  try {
+    fs.writeFileSync(mappingPath, JSON.stringify(mapping, null, 2))
+    return true
+  } catch (e) {
+    console.warn('[Driver Mapping] Failed to save:', e.message)
+    return false
+  }
+})
+
 // ── OBS handlers ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('obs:connect', async () => {

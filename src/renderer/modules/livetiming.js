@@ -408,6 +408,7 @@ export function initLiveTiming() {
     const drivers = state.DriverList
     if (!timing || !drivers) return
 
+    currentDrivers = drivers
     const rows = Object.entries(timing)
       .map(([num, t]) => ({ num, t, d: drivers[num] }))
       .filter(x => x.d)
@@ -450,6 +451,83 @@ export function initLiveTiming() {
   let eventsPaused  = false
   let currentState  = null
 
+  // ── Driver Mapping ────────────────────────────────────────────────────────
+  const mappingGridEl    = document.getElementById('lt-mapping-grid')
+  const mappingStatusEl  = document.getElementById('lt-mapping-status')
+  const mappingSaveBtn   = document.getElementById('lt-mapping-save')
+  const mappingResetBtn  = document.getElementById('lt-mapping-reset')
+  let driverMapping = {}
+  let currentDrivers = {}
+
+  async function loadDriverMapping() {
+    driverMapping = await window.api.driverMapping.load()
+  }
+
+  function renderDriverMapping() {
+    if (!currentDrivers || Object.keys(currentDrivers).length === 0) {
+      mappingGridEl.innerHTML = '<div class="lt-mapping-empty">No drivers in current session</div>'
+      return
+    }
+
+    const teamNames = [
+      'Red Bull Racing', 'Williams', 'Cadillac', 'Audi', 'Alpine', 'Aston Martin',
+      'Ferrari', 'Haas F1 Team', 'Kick Sauber', 'McLaren', 'Mercedes', 'Racing Bulls', 'RB'
+    ]
+
+    mappingGridEl.innerHTML = ''
+    Object.entries(currentDrivers)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+      .forEach(([num, driver]) => {
+        const row = document.createElement('div')
+        row.className = 'lt-mapping-row'
+        const currentTeam = driverMapping[num] || ''
+        if (currentTeam) row.classList.add('has-mapping')
+
+        const options = ['<option value="">— Select team —</option>']
+        teamNames.forEach(team => {
+          options.push(`<option value="${team}" ${currentTeam === team ? 'selected' : ''}>${team}</option>`)
+        })
+
+        row.innerHTML = `
+          <span class="lt-mapping-num">${num}</span>
+          <span class="lt-mapping-name">${driver.LastName || driver.FullName || '?'}</span>
+          <div class="lt-mapping-team">
+            <select data-driver-num="${num}">
+              ${options.join('')}
+            </select>
+          </div>
+        `
+        mappingGridEl.appendChild(row)
+
+        const select = row.querySelector('select')
+        select.addEventListener('change', (e) => {
+          driverMapping[num] = e.target.value || null
+          if (!driverMapping[num]) delete driverMapping[num]
+          row.classList.toggle('has-mapping', !!driverMapping[num])
+          mappingStatusEl.textContent = 'Unsaved changes'
+          mappingStatusEl.style.color = '#ff9800'
+        })
+      })
+  }
+
+  mappingSaveBtn.addEventListener('click', async () => {
+    const success = await window.api.driverMapping.save(driverMapping)
+    if (success) {
+      mappingStatusEl.textContent = 'Saved!'
+      mappingStatusEl.style.color = '#4caf50'
+      setTimeout(() => { mappingStatusEl.textContent = ''; mappingStatusEl.style.color = '' }, 2000)
+    }
+  })
+
+  mappingResetBtn.addEventListener('click', () => {
+    if (confirm('Reset all driver mappings?')) {
+      driverMapping = {}
+      renderDriverMapping()
+      mappingStatusEl.textContent = 'Reset (unsaved)'
+      mappingStatusEl.style.color = '#ff9800'
+    }
+  })
+
   ltTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       activeView = tab.dataset.ltview
@@ -457,6 +535,7 @@ export function initLiveTiming() {
       ltViews.forEach(v => v.classList.toggle('active', v.id === `lt-view-${activeView}`))
       if (activeView === 'state' && currentState) rawStateEl.textContent = JSON.stringify(currentState, null, 2)
       if (activeView === 'file') loadRawFile()
+      if (activeView === 'mapping') renderDriverMapping()
     })
   })
 
@@ -585,5 +664,8 @@ export function initLiveTiming() {
   }
 
   ciYearLoad.addEventListener('click', () => loadCircuitGrid(ciYearSelect.value))
+
+  // Load driver mapping on init
+  loadDriverMapping()
 
 }

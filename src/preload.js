@@ -9,6 +9,10 @@ contextBridge.exposeInMainWorld('api', {
     load: () => ipcRenderer.invoke('overlayMessage:load'),
     save: (message) => ipcRenderer.invoke('overlayMessage:save', message)
   },
+  driverMapping: {
+    load: () => ipcRenderer.invoke('driverMapping:load'),
+    save: (mapping) => ipcRenderer.invoke('driverMapping:save', mapping)
+  },
   launcher: {
     run: (path) => ipcRenderer.invoke('launcher:run', path),
     getIcon: (path) => ipcRenderer.invoke('launcher:getIcon', path)
