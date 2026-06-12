@@ -41,7 +41,7 @@ export async function initVirtualCamera() {
 
   function setToggleBtn(active) {
     vcamActive = active
-    toggleBtn.textContent = active ? 'Stop Virtual Camera' : 'Start Virtual Camera'
+    toggleBtn.textContent = active ? 'Stop VCAM' : 'Start VCAM'
     toggleBtn.className = active ? 'vcam-toggle-btn btn-obs btn-start' : 'vcam-toggle-btn btn-obs btn-stop'
   }
 

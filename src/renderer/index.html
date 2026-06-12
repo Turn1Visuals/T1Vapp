@@ -74,7 +74,7 @@
                           </div>
                           <div class="obs-col-content">
                             <button id="btn-go-live" class="btn-obs btn-start">Go Live</button>
-                            <button id="btn-vcam-toggle" class="btn-obs btn-stop">Start Virtual Camera</button>
+                            <button id="btn-vcam-toggle" class="btn-obs btn-stop">Start/Stop VCAM</button>
                             <button id="btn-stream-details" class="btn-obs btn-stop">Stream Details…</button>
                           </div>
                         </div>
@@ -107,12 +107,11 @@
                         </div>
                         <div class="obs-col">
                           <div class="obs-col-title">Overlay Message</div>
-                          <div class="obs-col-content">
-                            <textarea id="overlay-msg-input" placeholder="Enter message…" style="width: 100%; height: 60px; padding: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 13px; font-family: inherit; margin-bottom: 8px; resize: none;"></textarea>
-                            <div style="display: flex; gap: 8px;">
-                              <button id="btn-overlay-msg-send" class="btn-obs btn-stop" style="flex: 1;">Send</button>
-                              <button id="btn-overlay-msg-toggle" class="btn-obs btn-stop" style="flex: 1;">Show</button>
-                              <button id="btn-overlay-msg-clear" class="btn-obs" style="flex: 1; font-size: 11px;">Clear</button>
+                          <div style="display: flex; gap: 8px; align-items: flex-start; height: 100%;">
+                            <textarea id="overlay-msg-input" placeholder="Enter message…" style="flex: 1; height: 60px; padding: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 13px; font-family: inherit; resize: none;"></textarea>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                              <button id="btn-overlay-msg-send" class="btn-obs btn-stop" style="min-width: 60px;">Send</button>
+                              <button id="btn-overlay-msg-toggle" class="btn-obs btn-stop" style="min-width: 60px;">Show</button>
                             </div>
                           </div>
                         </div>

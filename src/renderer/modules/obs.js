@@ -245,6 +245,91 @@ let eyeSvg = '', eyeSlashSvg = '', volumeSvg = '', volumeMuteSvg = ''
     if (icon) icon.innerHTML = visible ? eyeSvg : eyeSlashSvg
   }
 
+  function showSourcesPopup(e, sceneName, sources) {
+    // Remove any existing popover
+    const existing = document.querySelector('.obs-sources-popover')
+    if (existing) existing.remove()
+
+    const popover = document.createElement('div')
+    popover.className = 'obs-sources-popover'
+    popover.style.position = 'fixed'
+    popover.style.left = e.clientX + 'px'
+    popover.style.top = e.clientY + 'px'
+    popover.style.background = 'var(--surface)'
+    popover.style.border = '1px solid var(--border)'
+    popover.style.borderRadius = '4px'
+    popover.style.padding = '8px'
+    popover.style.zIndex = '9999'
+    popover.style.minWidth = '200px'
+    popover.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'
+
+    sources.forEach(src => {
+      const sourceBtn = document.createElement('button')
+      sourceBtn.style.display = 'flex'
+      sourceBtn.style.alignItems = 'center'
+      sourceBtn.style.gap = '8px'
+      sourceBtn.style.width = '100%'
+      sourceBtn.style.padding = '8px'
+      sourceBtn.style.border = 'none'
+      sourceBtn.style.background = 'transparent'
+      sourceBtn.style.color = 'var(--text)'
+      sourceBtn.style.fontSize = '12px'
+      sourceBtn.style.cursor = 'pointer'
+      sourceBtn.style.marginBottom = '4px'
+
+      const icon = document.createElement('span')
+      icon.innerHTML = src.visible ? eyeSvg : eyeSlashSvg
+      icon.style.width = '16px'
+      icon.style.cursor = 'pointer'
+
+      const label = document.createElement('span')
+      label.textContent = src.name
+      label.style.flex = '1'
+      label.style.textAlign = 'left'
+
+      icon.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        const newVisible = !src.visible
+        await window.api.obs.setSourceVisible({ sceneName, sceneItemId: src.id, visible: newVisible })
+        src.visible = newVisible
+        icon.innerHTML = newVisible ? eyeSvg : eyeSlashSvg
+      })
+
+      sourceBtn.appendChild(icon)
+      sourceBtn.appendChild(label)
+
+      // Add mute button if applicable
+      window.api.obs.getInputMuted(src.name).then(muteRes => {
+        if (muteRes.ok) {
+          const muteIcon = document.createElement('span')
+          muteIcon.innerHTML = muteRes.muted ? volumeMuteSvg : volumeSvg
+          muteIcon.style.width = '16px'
+          muteIcon.style.cursor = 'pointer'
+          muteIcon.addEventListener('click', async (e) => {
+            e.stopPropagation()
+            const newMuted = !muteRes.muted
+            await window.api.obs.setInputMute(src.name, newMuted)
+            muteRes.muted = newMuted
+            muteIcon.innerHTML = newMuted ? volumeMuteSvg : volumeSvg
+          })
+          sourceBtn.appendChild(muteIcon)
+        }
+      })
+
+      popover.appendChild(sourceBtn)
+    })
+
+    document.body.appendChild(popover)
+
+    // Close on click outside
+    setTimeout(() => {
+      document.addEventListener('click', function closePopover() {
+        if (popover.parentNode) popover.remove()
+        document.removeEventListener('click', closePopover)
+      })
+    }, 0)
+  }
+
   async function renderScenes(scenes, current) {
     currentScene = current
     scenesEl.innerHTML = ''
@@ -287,11 +372,19 @@ let eyeSvg = '', eyeSlashSvg = '', volumeSvg = '', volumeMuteSvg = ''
 
       const sourcesDiv = document.createElement('div')
       sourcesDiv.className = 'obs-scene-block-sources'
+      sourcesDiv.style.display = 'none'
       block.appendChild(sourcesDiv)
       scenesEl.appendChild(block)
 
       const res = await window.api.obs.getSources(name)
       if (!res.ok) continue
+
+      // Right-click to show sources popup
+      preview.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        showSourcesPopup(e, name, res.sources)
+      })
+
       res.sources.forEach(async src => {
         const btn = document.createElement('button')
         btn.className = 'obs-scene-btn'

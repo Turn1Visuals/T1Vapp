@@ -1604,8 +1604,14 @@ html, body {
 
 .obs-col-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 6px;
+}
+
+.obs-col-content > .btn-obs {
+  flex: 1;
+  min-width: 100px;
 }
 
 /* ── OBS Scene Switcher ─────────────────────────────────────────────────────── */

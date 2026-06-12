@@ -542,7 +542,6 @@ export function initHomeStreams() {
   const overlayMsgInput = document.getElementById('overlay-msg-input')
   const btnSendMsg = document.getElementById('btn-overlay-msg-send')
   const btnToggleMsg = document.getElementById('btn-overlay-msg-toggle')
-  const btnClearMsg = document.getElementById('btn-overlay-msg-clear')
   let overlayMsgVisible = false
 
   // Load saved message on startup
@@ -599,22 +598,4 @@ export function initHomeStreams() {
     }
   })
 
-  // Clear button: clears the input and hides the message
-  btnClearMsg.addEventListener('click', async () => {
-    overlayMsgInput.value = ''
-    overlayMsgVisible = false
-    btnToggleMsg.textContent = 'Show'
-    btnToggleMsg.classList.remove('btn-start')
-    btnToggleMsg.classList.add('btn-stop')
-
-    try {
-      await window.api.obs.call('SetInputSettings', {
-        inputName: 'OverlayMessage',
-        inputSettings: { text: '' }
-      })
-      await saveMessage()
-    } catch (e) {
-      console.error('[overlay message]', e.message)
-    }
-  })
 }
