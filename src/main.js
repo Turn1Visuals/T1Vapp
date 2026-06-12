@@ -2151,11 +2151,24 @@ function clockPayload(snap) {
 function statePayload(snap) {
   const s = snap.state
   const si = s['SessionInfo'] ?? null
+  const driverMapping = loadDriverMapping()
+  let driverList = s['DriverList'] ?? null
+
+  // Apply driver mapping fallback to fill missing TeamName fields
+  if (driverList && typeof driverList === 'object') {
+    driverList = JSON.parse(JSON.stringify(driverList))
+    for (const [racingNumber, driver] of Object.entries(driverList)) {
+      if (driver && typeof driver === 'object' && !driver.TeamName && driverMapping[racingNumber]) {
+        driver.TeamName = driverMapping[racingNumber]
+      }
+    }
+  }
+
   return {
     SessionInfo:         si ? { ...si, ...sessionMeta(si) } : null,
     SessionData:         s['SessionData']          ?? null,
     SessionStatus:       s['SessionStatus']        ?? null,
-    DriverList:          s['DriverList']            ?? null,
+    DriverList:          driverList,
     TimingData:          s['TimingData']            ?? null,
     TimingAppData:       s['TimingAppData']         ?? null,
     TimingStats:         s['TimingStats']           ?? null,
