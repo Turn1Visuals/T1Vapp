@@ -113,7 +113,7 @@ export function initSettings() {
 
   // Check if browser cookies still exist
   if (state.config.youtube?.browserAuthenticated) {
-    window.api.browser.checkCookies('persist:yt-chat', 'youtube.com').then(res => {
+    window.api.browser.checkCookies('persist:yt-stream', 'youtube.com').then(res => {
       if (!res.hasCookies) {
         state.config.youtube.browserAuthenticated = false
         saveConfig()

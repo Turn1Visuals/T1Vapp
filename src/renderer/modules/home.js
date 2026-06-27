@@ -168,7 +168,7 @@ export function initHomeStreams() {
       const btn = document.getElementById('btn-yt-stream-login')
       btn.disabled = true
       btn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:yt-stream', 'persist:yt-chat'])
+      const res = await window.api.browser.finishSiteLogin(['persist:yt-stream'])
       ytStreamLoginPending = false
       if (res.ok) {
         state.config.youtube = { ...(state.config.youtube || {}), browserAuthenticated: true }
@@ -303,7 +303,7 @@ export function initHomeStreams() {
       const btn = document.getElementById('btn-yt-chat-login')
       btn.disabled = true
       btn.textContent = '…'
-      const res = await window.api.browser.finishSiteLogin(['persist:yt-chat', 'persist:yt-stream'])
+      const res = await window.api.browser.finishSiteLogin(['persist:yt-stream'])
       ytChatLoginPending = false
       if (res.ok) {
         state.config.youtube = { ...(state.config.youtube || {}), browserAuthenticated: true }
