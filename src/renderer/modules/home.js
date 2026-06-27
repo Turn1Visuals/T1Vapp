@@ -271,7 +271,7 @@ export function initHomeStreams() {
     const result = await window.api.youtube.getLiveBroadcast()
     if (result.ok) {
       currentLiveChatId = result.liveChatId
-      ytChatWv.src = `https://studio.youtube.com/live_chat?is_popout=1&v=${result.videoId}`
+      ytChatWv.src = `https://www.youtube.com/live_chat?v=${result.videoId}`
     } else {
       currentLiveChatId = null
       ytChatWv.src = 'about:blank'
