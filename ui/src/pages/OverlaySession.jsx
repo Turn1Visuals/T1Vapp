@@ -12,6 +12,7 @@ import BattleWidget from '../overlay/components/BattleWidget.jsx';
 import { AudioProvider, useEnqueueAudio } from '../overlay/components/AudioWidget.jsx';
 import Commentator from '../overlay/components/Commentator.jsx';
 import { getSessionColor } from '../overlay/sessionColor.js';
+import useHotLaps from '../overlay/useHotLaps.js';
 import { useSchedule, findNextSession, buildFallbackState } from '../overlay/useSchedule.js';
 import '../overlay/overlay.css';
 
@@ -50,6 +51,11 @@ function OverlayContent() {
   const announcedPoleRef   = React.useRef(null);
   const poleCheckRef       = React.useRef(false);
   const initializedRef     = React.useRef(false);
+
+  // Shared hot-lap detection (same logic as QualifyingLapWidget)
+  const { entries: hotLapEntries } = useHotLaps(state);
+  const hotLapsRef = React.useRef([]);
+  hotLapsRef.current = hotLapEntries;
 
   React.useEffect(() => {
     if (!state) return;
@@ -227,14 +233,16 @@ function OverlayContent() {
       enqueue('pole', text);
     }
 
-    if (poleCheckRef.current && announcedPoleRef.current === null && !flagJustFired) {
-      const p1num    = Object.keys(timing).find(n => Number(timing[n].Position) === 1) ?? null;
-      const refS1Sec = si?.BestLapSectors ? (state.BestLapSectors?.[p1num]?.S1 ?? null) : null;
-      const anyOnHotLap = Object.values(timing).some(line => line.InPit === 0 && line.Sector1SessionTime === null);
-      if (!anyOnHotLap) announcePole();
+    // Announce only once the flag is out in (S)Q3 and nobody is still on a hot lap
+    const anyOnHotLap = hotLapsRef.current.some(e => !e.isCompleted);
+
+    if (poleCheckRef.current && announcedPoleRef.current === null && !flagJustFired
+        && part === 3 && !anyOnHotLap) {
+      announcePole();
     }
 
-    if (announcedPoleRef.current !== null && isQual && part === 3) {
+    // Re-announce if P1 changed after the announcement (e.g. lap deletion)
+    if (announcedPoleRef.current !== null && isQual && part === 3 && !anyOnHotLap) {
       const p1num = Object.keys(timing).find(n => Number(timing[n].Position) === 1) ?? null;
       if (p1num && p1num !== announcedPoleRef.current) announcePole();
     }
