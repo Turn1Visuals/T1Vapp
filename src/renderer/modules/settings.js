@@ -464,8 +464,9 @@ export function initSettings() {
   })
 
   // ── Facebook settings ──
-  const fbAppIdInput  = document.getElementById('fb-app-id')
-  const fbAppSecInput = document.getElementById('fb-app-secret')
+  const fbAppIdInput    = document.getElementById('fb-app-id')
+  const fbAppSecInput   = document.getElementById('fb-app-secret')
+  const fbConfigIdInput = document.getElementById('fb-config-id')
   const fbPageLabel   = document.getElementById('fb-page-label')
   const fbPageSelect  = document.getElementById('fb-page-select')
   const fbSaveBtn     = document.getElementById('btn-fb-save')
@@ -473,13 +474,16 @@ export function initSettings() {
   const fbStatusEl    = document.getElementById('fb-status')
 
   const fbCreds = state.config.facebook || {}
-  fbAppIdInput.value  = fbCreds.appId     || ''
-  fbAppSecInput.value = fbCreds.appSecret || ''
+  fbAppIdInput.value    = fbCreds.appId     || ''
+  fbAppSecInput.value   = fbCreds.appSecret || ''
+  fbConfigIdInput.value = fbCreds.configId  || ''
 
-  fbAppIdInput.disabled  = true
-  fbAppSecInput.disabled = true
-  fbAppIdInput.closest('label').style.display  = 'none'
-  fbAppSecInput.closest('label').style.display = 'none'
+  fbAppIdInput.disabled    = true
+  fbAppSecInput.disabled   = true
+  fbConfigIdInput.disabled = true
+  fbAppIdInput.closest('label').style.display    = 'none'
+  fbAppSecInput.closest('label').style.display   = 'none'
+  fbConfigIdInput.closest('label').style.display = 'none'
   fbSaveBtn.textContent = 'Edit Facebook Settings'
   fbSaveBtn.className   = 'btn-secondary'
 
@@ -530,10 +534,12 @@ export function initSettings() {
 
   fbSaveBtn.addEventListener('click', () => {
     if (fbAppIdInput.disabled) {
-      fbAppIdInput.disabled  = false
-      fbAppSecInput.disabled = false
-      fbAppIdInput.closest('label').style.display  = ''
-      fbAppSecInput.closest('label').style.display = ''
+      fbAppIdInput.disabled    = false
+      fbAppSecInput.disabled   = false
+      fbConfigIdInput.disabled = false
+      fbAppIdInput.closest('label').style.display    = ''
+      fbAppSecInput.closest('label').style.display   = ''
+      fbConfigIdInput.closest('label').style.display = ''
       fbSaveBtn.textContent = 'Save Facebook Settings'
       fbSaveBtn.className   = 'btn-primary'
       fbAppIdInput.focus()
@@ -541,13 +547,16 @@ export function initSettings() {
       state.config.facebook = {
         ...(state.config.facebook || {}),
         appId:     fbAppIdInput.value.trim(),
-        appSecret: fbAppSecInput.value.trim()
+        appSecret: fbAppSecInput.value.trim(),
+        configId:  fbConfigIdInput.value.trim()
       }
       saveConfig()
-      fbAppIdInput.disabled  = true
-      fbAppSecInput.disabled = true
-      fbAppIdInput.closest('label').style.display  = 'none'
-      fbAppSecInput.closest('label').style.display = 'none'
+      fbAppIdInput.disabled    = true
+      fbAppSecInput.disabled   = true
+      fbConfigIdInput.disabled = true
+      fbAppIdInput.closest('label').style.display    = 'none'
+      fbAppSecInput.closest('label').style.display   = 'none'
+      fbConfigIdInput.closest('label').style.display = 'none'
       fbSaveBtn.textContent = 'Edit Facebook Settings'
       fbSaveBtn.className   = 'btn-secondary'
       updateFbStatus()
@@ -567,7 +576,7 @@ export function initSettings() {
     }
     fbStatusEl.textContent = 'Opening browser…'
     fbStatusEl.className   = 'yt-status'
-    const result = await window.api.facebook.auth(state.config.facebook.appId, state.config.facebook.appSecret)
+    const result = await window.api.facebook.auth(state.config.facebook.appId, state.config.facebook.appSecret, state.config.facebook.configId)
     if (result.ok) {
       state.config.facebook.pages = result.pages
       saveConfig()

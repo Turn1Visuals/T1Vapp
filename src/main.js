@@ -1346,7 +1346,7 @@ const FB_REDIRECT_PORT = 8986
 const FB_REDIRECT_URI  = `http://localhost:${FB_REDIRECT_PORT}/`
 const FB_GRAPH         = 'https://graph.facebook.com/v23.0'
 
-ipcMain.handle('facebook:auth', (_, appId, appSecret) => {
+ipcMain.handle('facebook:auth', (_, appId, appSecret, configId) => {
   return new Promise((resolve) => {
     const server = http.createServer(async (req, res) => {
       const url   = new URL(req.url, FB_REDIRECT_URI)
@@ -1383,7 +1383,10 @@ ipcMain.handle('facebook:auth', (_, appId, appSecret) => {
       authUrl.searchParams.set('client_id',     appId)
       authUrl.searchParams.set('redirect_uri',  FB_REDIRECT_URI)
       authUrl.searchParams.set('response_type', 'code')
-      authUrl.searchParams.set('scope',         'pages_show_list,pages_read_engagement,pages_manage_posts,publish_video')
+      // Facebook Login for Business apps authenticate with a login
+      // configuration instead of a raw scope list
+      if (configId) authUrl.searchParams.set('config_id', configId)
+      else authUrl.searchParams.set('scope', 'business_management,publish_video,pages_read_engagement,pages_manage_posts')
       shell.openExternal(authUrl.toString())
     })
     server.on('error', (e) => resolve({ ok: false, error: e.message }))
