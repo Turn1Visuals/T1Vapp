@@ -1370,11 +1370,32 @@ ipcMain.handle('facebook:auth', (_, appId, appSecret, configId) => {
         const userToken = longData.access_token || tokenData.access_token
 
         // 3. Page tokens derived from a long-lived user token don't expire
-        const pagesRes  = await fetch(`${FB_GRAPH}/me/accounts?access_token=${userToken}`)
+        const pagesRes  = await fetch(`${FB_GRAPH}/me/accounts?fields=id,name,access_token&access_token=${userToken}`)
         const pagesData = await pagesRes.json()
-        if (pagesData.error) { resolve({ ok: false, error: pagesData.error.message }); return }
-        const pages = (pagesData.data || []).map(p => ({ id: p.id, name: p.name, accessToken: p.access_token }))
-        if (!pages.length) { resolve({ ok: false, error: 'No Facebook pages found for this account' }); return }
+        let pages = (pagesData.data || [])
+          .filter(p => p.access_token)
+          .map(p => ({ id: p.id, name: p.name, accessToken: p.access_token }))
+
+        // /me/accounts needs pages_show_list, which business login configs
+        // can't include — fall back to listing pages owned by the user's
+        // business portfolios via business_management
+        if (!pages.length) {
+          const bizRes  = await fetch(`${FB_GRAPH}/me/businesses?fields=id,name&access_token=${userToken}`)
+          const bizData = await bizRes.json()
+          for (const biz of bizData.data || []) {
+            const ownedRes  = await fetch(`${FB_GRAPH}/${biz.id}/owned_pages?fields=id,name,access_token&access_token=${userToken}`)
+            const ownedData = await ownedRes.json()
+            for (const p of ownedData.data || []) {
+              if (p.access_token) pages.push({ id: p.id, name: p.name, accessToken: p.access_token })
+            }
+          }
+        }
+
+        if (!pages.length) {
+          const detail = pagesData.error?.message || 'grant page access in the login dialog, or make sure the page is owned by your business portfolio'
+          resolve({ ok: false, error: `No Facebook pages found — ${detail}` })
+          return
+        }
         resolve({ ok: true, pages })
       } catch (e) { resolve({ ok: false, error: e.message }) }
     })
