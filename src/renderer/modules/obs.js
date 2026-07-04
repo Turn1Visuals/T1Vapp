@@ -107,6 +107,9 @@ export function initObs() {
       clearTimeout(debounceTimer)
       debounceTimer = setTimeout(validate, 600)
     })
+    // Prefilled field whose saved resolution didn't match (fuzzy match,
+    // or saved before validation existed) — resolve it now
+    if (input.value.trim() && !resolved) validate()
     return () => resolved
   }
 
