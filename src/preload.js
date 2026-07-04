@@ -89,6 +89,11 @@ contextBridge.exposeInMainWorld('api', {
     deleteBroadcast:  (opts)    => ipcRenderer.invoke('youtube:deleteBroadcast', opts),
     getViewers:       (opts)    => ipcRenderer.invoke('youtube:getViewers', opts)
   },
+  facebook: {
+    auth:            (appId, appSecret) => ipcRenderer.invoke('facebook:auth', appId, appSecret),
+    goLive:          (opts)             => ipcRenderer.invoke('facebook:goLive', opts),
+    deleteLiveVideo: (opts)             => ipcRenderer.invoke('facebook:deleteLiveVideo', opts)
+  },
   tiktok: {
     auth:   (clientKey, clientSecret) => ipcRenderer.invoke('tiktok:auth', clientKey, clientSecret),
     upload: (opts) => ipcRenderer.invoke('tiktok:upload', opts)

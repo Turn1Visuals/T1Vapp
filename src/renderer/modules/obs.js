@@ -246,9 +246,11 @@ export function initObs() {
     }
     goLiveBtn.disabled = true
 
-    let broadcastId = null
+    let broadcastId   = null
+    let fbLiveVideoId = null
     async function abort(message) {
-      if (broadcastId) await window.api.youtube.deleteBroadcast({ broadcastId })
+      if (broadcastId)   await window.api.youtube.deleteBroadcast({ broadcastId })
+      if (fbLiveVideoId) await window.api.facebook.deleteLiveVideo({ liveVideoId: fbLiveVideoId })
       setStatus(message, '#e10600')
       goLiveBtn.disabled = false
     }
@@ -287,6 +289,13 @@ export function initObs() {
         tags:       allTags.slice(0, 10)
       })
       if (!kkRes.ok) return abort('Kick: ' + kkRes.error)
+    }
+
+    if (state.config.facebook?.pageToken) {
+      setStatus('Setting up Facebook…', '')
+      const fbRes = await window.api.facebook.goLive({ title, description: desc })
+      if (!fbRes.ok) return abort('Facebook: ' + fbRes.error)
+      fbLiveVideoId = fbRes.liveVideoId
     }
 
     setStatus('Starting stream…', '')

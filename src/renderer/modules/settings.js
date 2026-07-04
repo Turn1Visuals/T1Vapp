@@ -463,6 +463,122 @@ export function initSettings() {
     updateKickStatus()
   })
 
+  // ── Facebook settings ──
+  const fbAppIdInput  = document.getElementById('fb-app-id')
+  const fbAppSecInput = document.getElementById('fb-app-secret')
+  const fbPageLabel   = document.getElementById('fb-page-label')
+  const fbPageSelect  = document.getElementById('fb-page-select')
+  const fbSaveBtn     = document.getElementById('btn-fb-save')
+  const fbConnectBtn  = document.getElementById('btn-fb-connect')
+  const fbStatusEl    = document.getElementById('fb-status')
+
+  const fbCreds = state.config.facebook || {}
+  fbAppIdInput.value  = fbCreds.appId     || ''
+  fbAppSecInput.value = fbCreds.appSecret || ''
+
+  fbAppIdInput.disabled  = true
+  fbAppSecInput.disabled = true
+  fbAppIdInput.closest('label').style.display  = 'none'
+  fbAppSecInput.closest('label').style.display = 'none'
+  fbSaveBtn.textContent = 'Edit Facebook Settings'
+  fbSaveBtn.className   = 'btn-secondary'
+
+  function renderFbPages() {
+    const pages = state.config.facebook?.pages || []
+    if (pages.length > 1) {
+      fbPageLabel.style.display = ''
+      fbPageSelect.innerHTML = ''
+      pages.forEach(p => {
+        const opt = document.createElement('option')
+        opt.value = p.id
+        opt.textContent = p.name
+        fbPageSelect.appendChild(opt)
+      })
+      if (state.config.facebook?.pageId) fbPageSelect.value = state.config.facebook.pageId
+    } else {
+      fbPageLabel.style.display = 'none'
+    }
+  }
+
+  function updateFbStatus() {
+    const hasCreds  = !!(state.config.facebook?.appId && state.config.facebook?.appSecret)
+    const connected = !!state.config.facebook?.pageToken
+    fbConnectBtn.disabled = !hasCreds
+    if (connected) {
+      fbStatusEl.textContent = '● Connected — ' + (state.config.facebook.pageName || 'page')
+      fbStatusEl.className   = 'yt-status connected'
+      fbConnectBtn.textContent = 'Disconnect'
+    } else {
+      fbStatusEl.textContent   = hasCreds ? 'Not connected' : 'Enter credentials first'
+      fbStatusEl.className     = 'yt-status'
+      fbConnectBtn.textContent = 'Connect'
+    }
+  }
+  renderFbPages()
+  updateFbStatus()
+
+  function selectFbPage(pageId) {
+    const page = (state.config.facebook?.pages || []).find(p => p.id === pageId)
+    if (!page) return
+    state.config.facebook.pageId    = page.id
+    state.config.facebook.pageName  = page.name
+    state.config.facebook.pageToken = page.accessToken
+    saveConfig()
+    updateFbStatus()
+  }
+  fbPageSelect.addEventListener('change', () => selectFbPage(fbPageSelect.value))
+
+  fbSaveBtn.addEventListener('click', () => {
+    if (fbAppIdInput.disabled) {
+      fbAppIdInput.disabled  = false
+      fbAppSecInput.disabled = false
+      fbAppIdInput.closest('label').style.display  = ''
+      fbAppSecInput.closest('label').style.display = ''
+      fbSaveBtn.textContent = 'Save Facebook Settings'
+      fbSaveBtn.className   = 'btn-primary'
+      fbAppIdInput.focus()
+    } else {
+      state.config.facebook = {
+        ...(state.config.facebook || {}),
+        appId:     fbAppIdInput.value.trim(),
+        appSecret: fbAppSecInput.value.trim()
+      }
+      saveConfig()
+      fbAppIdInput.disabled  = true
+      fbAppSecInput.disabled = true
+      fbAppIdInput.closest('label').style.display  = 'none'
+      fbAppSecInput.closest('label').style.display = 'none'
+      fbSaveBtn.textContent = 'Edit Facebook Settings'
+      fbSaveBtn.className   = 'btn-secondary'
+      updateFbStatus()
+    }
+  })
+
+  fbConnectBtn.addEventListener('click', async () => {
+    if (state.config.facebook?.pageToken) {
+      state.config.facebook.pageToken = null
+      state.config.facebook.pageId    = null
+      state.config.facebook.pageName  = null
+      state.config.facebook.pages     = null
+      saveConfig()
+      renderFbPages()
+      updateFbStatus()
+      return
+    }
+    fbStatusEl.textContent = 'Opening browser…'
+    fbStatusEl.className   = 'yt-status'
+    const result = await window.api.facebook.auth(state.config.facebook.appId, state.config.facebook.appSecret)
+    if (result.ok) {
+      state.config.facebook.pages = result.pages
+      saveConfig()
+      renderFbPages()
+      selectFbPage(result.pages[0].id)
+    } else {
+      fbStatusEl.textContent = 'Auth failed: ' + result.error
+      fbStatusEl.className   = 'yt-status error'
+    }
+  })
+
   // Kick chat/stream login
   // Browser tabs
   const tabList = document.getElementById('browser-tab-list')

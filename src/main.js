@@ -1341,6 +1341,85 @@ ipcMain.handle('kick:setTitle', async (_, { title, categoryId, tags }) => {
   } catch (e) { return { ok: false, error: e.message } }
 })
 
+// ── Facebook ─────────────────────────────────────────────────────────────────
+const FB_REDIRECT_PORT = 8986
+const FB_REDIRECT_URI  = `http://localhost:${FB_REDIRECT_PORT}/`
+const FB_GRAPH         = 'https://graph.facebook.com/v23.0'
+
+ipcMain.handle('facebook:auth', (_, appId, appSecret) => {
+  return new Promise((resolve) => {
+    const server = http.createServer(async (req, res) => {
+      const url   = new URL(req.url, FB_REDIRECT_URI)
+      const code  = url.searchParams.get('code')
+      const error = url.searchParams.get('error')
+      if (!code && !error) { res.writeHead(204); res.end(); return }
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end('<html><body style="background:#0e0e0e;color:#f0f0f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><p>' +
+        (code ? '✓ Connected! You can close this tab.' : '✗ Auth failed.') + '</p></body></html>')
+      server.close()
+      if (error || !code) { resolve({ ok: false, error: error || 'No code received' }); return }
+      try {
+        // 1. Code → short-lived user token
+        const tokenRes = await fetch(`${FB_GRAPH}/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&redirect_uri=${encodeURIComponent(FB_REDIRECT_URI)}&code=${code}`)
+        const tokenData = await tokenRes.json()
+        if (!tokenData.access_token) { resolve({ ok: false, error: tokenData.error?.message || JSON.stringify(tokenData) }); return }
+
+        // 2. Short-lived → long-lived user token (~60 days)
+        const longRes  = await fetch(`${FB_GRAPH}/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${tokenData.access_token}`)
+        const longData = await longRes.json()
+        const userToken = longData.access_token || tokenData.access_token
+
+        // 3. Page tokens derived from a long-lived user token don't expire
+        const pagesRes  = await fetch(`${FB_GRAPH}/me/accounts?access_token=${userToken}`)
+        const pagesData = await pagesRes.json()
+        if (pagesData.error) { resolve({ ok: false, error: pagesData.error.message }); return }
+        const pages = (pagesData.data || []).map(p => ({ id: p.id, name: p.name, accessToken: p.access_token }))
+        if (!pages.length) { resolve({ ok: false, error: 'No Facebook pages found for this account' }); return }
+        resolve({ ok: true, pages })
+      } catch (e) { resolve({ ok: false, error: e.message }) }
+    })
+    server.listen(FB_REDIRECT_PORT, () => {
+      const authUrl = new URL('https://www.facebook.com/v23.0/dialog/oauth')
+      authUrl.searchParams.set('client_id',     appId)
+      authUrl.searchParams.set('redirect_uri',  FB_REDIRECT_URI)
+      authUrl.searchParams.set('response_type', 'code')
+      authUrl.searchParams.set('scope',         'pages_show_list,pages_read_engagement,pages_manage_posts,publish_video')
+      shell.openExternal(authUrl.toString())
+    })
+    server.on('error', (e) => resolve({ ok: false, error: e.message }))
+  })
+})
+
+ipcMain.handle('facebook:goLive', async (_, { title, description }) => {
+  const cfg = loadConfig()
+  const fb  = cfg.facebook || {}
+  if (!fb.pageToken || !fb.pageId) return { ok: false, error: 'Not connected to Facebook' }
+  try {
+    const params = new URLSearchParams({
+      title,
+      description:  description || '',
+      status:       'LIVE_NOW',
+      access_token: fb.pageToken
+    })
+    const res  = await fetch(`${FB_GRAPH}/${fb.pageId}/live_videos`, { method: 'POST', body: params })
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.error.message }
+    return { ok: true, liveVideoId: data.id }
+  } catch (e) { return { ok: false, error: e.message } }
+})
+
+ipcMain.handle('facebook:deleteLiveVideo', async (_, { liveVideoId }) => {
+  const cfg = loadConfig()
+  const fb  = cfg.facebook || {}
+  if (!fb.pageToken) return { ok: false, error: 'Not connected' }
+  try {
+    const res  = await fetch(`${FB_GRAPH}/${liveVideoId}?access_token=${fb.pageToken}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.error.message }
+    return { ok: true }
+  } catch (e) { return { ok: false, error: e.message } }
+})
+
 ipcMain.handle('kick:searchCategory', async (_, { query }) => {
   const cfg = loadConfig()
   const kk  = cfg.kick || {}
