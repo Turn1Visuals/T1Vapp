@@ -95,8 +95,9 @@ contextBridge.exposeInMainWorld('api', {
   },
   twitch: {
     auth:       (clientId, clientSecret) => ipcRenderer.invoke('twitch:auth', clientId, clientSecret),
-    sendChat:   (opts)                   => ipcRenderer.invoke('twitch:sendChat', opts),
-    setTitle:   (opts)                   => ipcRenderer.invoke('twitch:setTitle', opts),
+    sendChat:       (opts)               => ipcRenderer.invoke('twitch:sendChat', opts),
+    setTitle:       (opts)               => ipcRenderer.invoke('twitch:setTitle', opts),
+    searchCategory: (opts)               => ipcRenderer.invoke('twitch:searchCategory', opts),
     getViewers: ()                       => ipcRenderer.invoke('twitch:getViewers')
   },
   browser: {
@@ -110,8 +111,9 @@ contextBridge.exposeInMainWorld('api', {
   },
   kick: {
     auth:          (clientId, clientSecret) => ipcRenderer.invoke('kick:auth', clientId, clientSecret),
-    sendChat:      (opts)                   => ipcRenderer.invoke('kick:sendChat', opts),
-    setTitle:      (opts)                   => ipcRenderer.invoke('kick:setTitle', opts),
+    sendChat:       (opts)                  => ipcRenderer.invoke('kick:sendChat', opts),
+    setTitle:       (opts)                  => ipcRenderer.invoke('kick:setTitle', opts),
+    searchCategory: (opts)                  => ipcRenderer.invoke('kick:searchCategory', opts),
     getViewers:    (opts)                   => ipcRenderer.invoke('kick:getViewers', opts),
     checkSession:         ()     => ipcRenderer.invoke('kick:checkSession'),
     injectCookies:        (opts) => ipcRenderer.invoke('kick:injectCookies', opts),

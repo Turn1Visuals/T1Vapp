@@ -915,7 +915,7 @@ ipcMain.handle('youtube:sendChat', async (_, { message, liveChatId }) => {
   }
 })
 
-ipcMain.handle('youtube:goLive', async (_, { title, description }) => {
+ipcMain.handle('youtube:goLive', async (_, { title, description, privacy, categoryId, tags }) => {
   const cfg = loadConfig()
   const yt = cfg.youtube || {}
   if (!yt.refreshToken) return { ok: false, error: 'Not connected to YouTube' }
@@ -928,7 +928,7 @@ ipcMain.handle('youtube:goLive', async (_, { title, description }) => {
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         snippet: { title, description: description || '', scheduledStartTime: new Date().toISOString() },
-        status:  { privacyStatus: 'public', selfDeclaredMadeForKids: false },
+        status:  { privacyStatus: privacy || 'public', selfDeclaredMadeForKids: false },
         contentDetails: { enableAutoStart: true, enableAutoStop: true, enableEmbed: true }
       })
     })
@@ -962,6 +962,33 @@ ipcMain.handle('youtube:goLive', async (_, { title, description }) => {
     if (bindData.error) {
       await deleteBroadcast()
       return { ok: false, error: bindData.error.message }
+    }
+
+    // 4. Tags and category live on the video resource, not the broadcast —
+    // snippet updates must resend the full snippet, so fetch it first
+    if ((tags && tags.length) || categoryId) {
+      const vRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${broadcastId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      })
+      const vData = await vRes.json()
+      const video = vData.items?.[0]
+      if (!video) {
+        await deleteBroadcast()
+        return { ok: false, error: 'Could not load video to set tags/category' }
+      }
+      if (tags && tags.length) video.snippet.tags = tags
+      if (categoryId) video.snippet.categoryId = categoryId
+      else if (!video.snippet.categoryId) video.snippet.categoryId = '17' // Sports
+      const uRes = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: broadcastId, snippet: video.snippet })
+      })
+      const uData = await uRes.json()
+      if (uData.error) {
+        await deleteBroadcast()
+        return { ok: false, error: 'Tags/category: ' + uData.error.message }
+      }
     }
 
     return { ok: true, broadcastId }
@@ -1086,7 +1113,7 @@ ipcMain.handle('twitch:sendChat', async (_, { message }) => {
   }
 })
 
-ipcMain.handle('twitch:setTitle', async (_, { title, category, tags }) => {
+ipcMain.handle('twitch:setTitle', async (_, { title, categoryId, tags, language }) => {
   const cfg = loadConfig()
   const tw  = cfg.twitch || {}
   if (!tw.refreshToken) return { ok: false, error: 'Not connected to Twitch' }
@@ -1103,19 +1130,9 @@ ipcMain.handle('twitch:setTitle', async (_, { title, category, tags }) => {
     if (!broadcasterId) return { ok: false, error: 'Channel not found' }
 
     const body = { title }
-
-    if (category) {
-      const gameRes = await fetch(`https://api.twitch.tv/helix/games?name=${encodeURIComponent(category)}`, {
-        headers: { Authorization: `Bearer ${accessToken}`, 'Client-Id': tw.clientId }
-      })
-      const gameData = await gameRes.json()
-      const gameId = gameData.data?.[0]?.id
-      if (gameId) body.game_id = gameId
-    }
-
-    if (tags) {
-      body.tags = tags.split(',').map(t => t.trim()).filter(Boolean)
-    }
+    if (categoryId)             body.game_id = categoryId
+    if (tags && tags.length)    body.tags = tags
+    if (language)               body.broadcaster_language = language
 
     const res = await fetch(`https://api.twitch.tv/helix/channels?broadcaster_id=${broadcasterId}`, {
       method: 'PATCH',
@@ -1127,6 +1144,26 @@ ipcMain.handle('twitch:setTitle', async (_, { title, category, tags }) => {
       return { ok: false, error: data.message || 'Failed to update channel' }
     }
     return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
+ipcMain.handle('twitch:searchCategory', async (_, { query }) => {
+  const cfg = loadConfig()
+  const tw  = cfg.twitch || {}
+  if (!tw.refreshToken) return { ok: false, error: 'Not connected to Twitch' }
+  try {
+    const { accessToken, refreshToken: newRefresh } = await twitchRefreshAccessToken(tw.clientId, tw.clientSecret, tw.refreshToken)
+    cfg.twitch.refreshToken = newRefresh
+    saveConfig(cfg)
+
+    const res = await fetch(`https://api.twitch.tv/helix/search/categories?query=${encodeURIComponent(query)}&first=10`, {
+      headers: { Authorization: `Bearer ${accessToken}`, 'Client-Id': tw.clientId }
+    })
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.message || data.error }
+    return { ok: true, results: (data.data || []).map(c => ({ id: c.id, name: c.name })) }
   } catch (e) {
     return { ok: false, error: e.message }
   }
@@ -1282,7 +1319,7 @@ ipcMain.handle('kick:sendChat', async (_, { message }) => {
   } catch (e) { return { ok: false, error: e.message } }
 })
 
-ipcMain.handle('kick:setTitle', async (_, { title, tags }) => {
+ipcMain.handle('kick:setTitle', async (_, { title, categoryId, tags }) => {
   const cfg = loadConfig()
   const kk  = cfg.kick || {}
   if (!kk.refreshToken) return { ok: false, error: 'Not connected to Kick' }
@@ -1291,14 +1328,37 @@ ipcMain.handle('kick:setTitle', async (_, { title, tags }) => {
     cfg.kick.refreshToken = newRefresh
     saveConfig(cfg)
     const body = { stream_title: title }
+    if (categoryId)          body.category_id = Number(categoryId)
     if (tags && tags.length) body.custom_tags = tags
     const res = await fetch('https://api.kick.com/public/v1/channels', {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     })
-    return res.ok ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
+    if (res.ok) return { ok: true }
+    const errBody = await res.text().catch(() => '')
+    return { ok: false, error: `HTTP ${res.status}${errBody ? ' — ' + errBody.slice(0, 200) : ''}` }
   } catch (e) { return { ok: false, error: e.message } }
+})
+
+ipcMain.handle('kick:searchCategory', async (_, { query }) => {
+  const cfg = loadConfig()
+  const kk  = cfg.kick || {}
+  if (!kk.refreshToken) return { ok: false, error: 'Not connected to Kick' }
+  try {
+    const { accessToken, refreshToken: newRefresh } = await kickRefreshAccessToken(kk.clientId, kk.clientSecret, kk.refreshToken)
+    cfg.kick.refreshToken = newRefresh
+    saveConfig(cfg)
+    const res = await fetch(`https://api.kick.com/public/v1/categories?q=${encodeURIComponent(query)}`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    const data = await res.json()
+    const items = Array.isArray(data?.data) ? data.data : []
+    return { ok: true, results: items.map(c => ({ id: c.id, name: c.name })) }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
 })
 
 async function importKickCookiesFromBrowser() {

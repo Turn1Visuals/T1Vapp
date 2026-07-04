@@ -569,23 +569,80 @@
         <button id="btn-stream-details-close" class="modal-close">✕</button>
       </div>
       <div class="modal-body">
-        <label class="modal-label">
-          Title
-          <input id="stream-title-input" type="text" class="setup-input" placeholder="Title…" />
-        </label>
-        <label class="modal-label">
-          YouTube
-          <textarea id="stream-desc-input" class="setup-input setup-desc" placeholder="Description…"></textarea>
-        </label>
-        <label class="modal-label">
-          Twitch
-          <input id="twitch-category-input" type="text" class="setup-input" placeholder="Category…" />
-          <input id="twitch-tags-input" type="text" class="setup-input" placeholder="Tags, comma separated…" />
-        </label>
-        <label class="modal-label">
-          Kick
-          <input id="kick-tags-input" type="text" class="setup-input" placeholder="Tags, comma separated…" />
-        </label>
+        <div class="modal-section">
+          <div class="modal-section-title">Shared</div>
+          <label class="modal-label">
+            Title
+            <input id="stream-title-input" type="text" class="setup-input" placeholder="Title — used on all platforms…" />
+          </label>
+          <label class="modal-label">
+            Tags
+            <input id="stream-tags-input" type="text" class="setup-input" placeholder="Tags, comma separated — used on all platforms…" />
+            <span id="stream-tags-hint" class="field-hint"></span>
+          </label>
+        </div>
+        <div class="modal-section">
+          <div class="modal-section-title">YouTube</div>
+          <label class="modal-label">
+            Description
+            <textarea id="stream-desc-input" class="setup-input setup-desc" placeholder="Description…"></textarea>
+          </label>
+          <label class="modal-label">
+            Privacy
+            <select id="yt-privacy-input" class="setup-input">
+              <option value="public">Public</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="private">Private</option>
+            </select>
+          </label>
+          <label class="modal-label">
+            Category
+            <select id="yt-category-input" class="setup-input">
+              <option value="">Don't set</option>
+              <option value="17">Sports</option>
+              <option value="2">Autos &amp; Vehicles</option>
+              <option value="20">Gaming</option>
+              <option value="24">Entertainment</option>
+              <option value="25">News &amp; Politics</option>
+              <option value="22">People &amp; Blogs</option>
+              <option value="23">Comedy</option>
+              <option value="10">Music</option>
+              <option value="27">Education</option>
+              <option value="28">Science &amp; Technology</option>
+              <option value="19">Travel &amp; Events</option>
+              <option value="1">Film &amp; Animation</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-section">
+          <div class="modal-section-title">Twitch</div>
+          <label class="modal-label">
+            Category
+            <input id="twitch-category-input" type="text" class="setup-input" placeholder="Category…" />
+            <span id="twitch-category-status" class="field-hint"></span>
+          </label>
+          <label class="modal-label">
+            Language
+            <select id="twitch-language-input" class="setup-input">
+              <option value="">Don't set</option>
+              <option value="en">English</option>
+              <option value="nl">Nederlands</option>
+              <option value="de">Deutsch</option>
+              <option value="fr">Français</option>
+              <option value="es">Español</option>
+              <option value="it">Italiano</option>
+              <option value="pt">Português</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-section">
+          <div class="modal-section-title">Kick</div>
+          <label class="modal-label">
+            Category
+            <input id="kick-category-input" type="text" class="setup-input" placeholder="Category…" />
+            <span id="kick-category-status" class="field-hint"></span>
+          </label>
+        </div>
       </div>
     </div>
   </div>

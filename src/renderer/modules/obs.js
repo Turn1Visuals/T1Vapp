@@ -15,25 +15,103 @@ export function initObs() {
     if (e.target === streamDetailsBackdrop) streamDetailsBackdrop.style.display = 'none'
   })
 
-  const titleInput    = document.getElementById('stream-title-input')
-  const descInput     = document.getElementById('stream-desc-input')
-  const categoryInput = document.getElementById('twitch-category-input')
-  const tagsInput     = document.getElementById('twitch-tags-input')
-  const kickTagsInput = document.getElementById('kick-tags-input')
+  const titleInput         = document.getElementById('stream-title-input')
+  const tagsInput          = document.getElementById('stream-tags-input')
+  const tagsHint           = document.getElementById('stream-tags-hint')
+  const descInput          = document.getElementById('stream-desc-input')
+  const ytPrivacyInput     = document.getElementById('yt-privacy-input')
+  const ytCategoryInput    = document.getElementById('yt-category-input')
+  const twCategoryInput    = document.getElementById('twitch-category-input')
+  const twCategoryStatus   = document.getElementById('twitch-category-status')
+  const twLanguageInput    = document.getElementById('twitch-language-input')
+  const kickCategoryInput  = document.getElementById('kick-category-input')
+  const kickCategoryStatus = document.getElementById('kick-category-status')
   const statusEl    = document.getElementById('golive-status')
 
   // Persist fields in localStorage
-  const LS_KEYS = { title: 'stream-title', desc: 'stream-desc', category: 'twitch-category', tags: 'twitch-tags', kickTags: 'kick-tags' }
-  titleInput.value    = localStorage.getItem(LS_KEYS.title)    || ''
-  descInput.value     = localStorage.getItem(LS_KEYS.desc)     || ''
-  categoryInput.value = localStorage.getItem(LS_KEYS.category) || ''
-  tagsInput.value     = localStorage.getItem(LS_KEYS.tags)     || ''
-  kickTagsInput.value = localStorage.getItem(LS_KEYS.kickTags) || ''
-  titleInput.addEventListener('input',    () => localStorage.setItem(LS_KEYS.title,    titleInput.value))
-  descInput.addEventListener('input',     () => localStorage.setItem(LS_KEYS.desc,     descInput.value))
-  categoryInput.addEventListener('input', () => localStorage.setItem(LS_KEYS.category, categoryInput.value))
-  tagsInput.addEventListener('input',     () => localStorage.setItem(LS_KEYS.tags,     tagsInput.value))
-  kickTagsInput.addEventListener('input', () => localStorage.setItem(LS_KEYS.kickTags, kickTagsInput.value))
+  function persistField(el, key) {
+    const saved = localStorage.getItem(key)
+    if (saved !== null) el.value = saved
+    el.addEventListener('input', () => localStorage.setItem(key, el.value))
+  }
+  persistField(titleInput,        'stream-title')
+  persistField(tagsInput,         'stream-tags')
+  persistField(descInput,         'stream-desc')
+  persistField(ytPrivacyInput,    'yt-privacy')
+  persistField(ytCategoryInput,   'yt-category')
+  persistField(twCategoryInput,   'twitch-category')
+  persistField(twLanguageInput,   'twitch-language')
+  persistField(kickCategoryInput, 'kick-category')
+
+  // ── Tags: one shared field, adapted to each platform's rules ──
+  function parseTags(value) {
+    return value.split(',').map(t => t.trim()).filter(Boolean)
+  }
+  // Twitch: max 10 tags, 25 chars each, letters/numbers only
+  function toTwitchTags(list) {
+    return list.map(t => t.replace(/[^\p{L}\p{N}]/gu, '').slice(0, 25)).filter(Boolean).slice(0, 10)
+  }
+  function updateTagsHint() {
+    const list = parseTags(tagsInput.value)
+    if (!list.length) { tagsHint.textContent = ''; return }
+    const tw = toTwitchTags(list)
+    const parts = []
+    if (tw.join(',') !== list.join(',')) parts.push('Twitch: ' + tw.join(', '))
+    if (list.length > 10) parts.push('only first 10 used on Twitch/Kick')
+    tagsHint.textContent = parts.join(' · ')
+    tagsHint.className = 'field-hint'
+  }
+  tagsInput.addEventListener('input', updateTagsHint)
+  updateTagsHint()
+
+  // ── Category fields: resolve against the platform as you type ──
+  function setupCategoryValidation(input, hintEl, storageKey, searchFn) {
+    let resolved = null
+    const savedId   = localStorage.getItem(storageKey + '-id')
+    const savedName = localStorage.getItem(storageKey + '-name')
+    if (savedId && savedName && savedName.toLowerCase() === input.value.trim().toLowerCase()) {
+      resolved = { id: savedId, name: savedName }
+      hintEl.textContent = '✓ ' + savedName
+      hintEl.className = 'field-hint ok'
+    }
+    let debounceTimer = null
+    async function validate() {
+      const q = input.value.trim()
+      resolved = null
+      localStorage.removeItem(storageKey + '-id')
+      localStorage.removeItem(storageKey + '-name')
+      if (!q) { hintEl.textContent = ''; hintEl.className = 'field-hint'; return }
+      hintEl.textContent = 'Checking…'
+      hintEl.className = 'field-hint'
+      const res = await searchFn({ query: q })
+      if (input.value.trim() !== q) return
+      if (!res.ok) {
+        hintEl.textContent = '✗ ' + res.error
+        hintEl.className = 'field-hint error'
+        return
+      }
+      const exact = res.results.find(r => r.name.toLowerCase() === q.toLowerCase())
+      const match = exact || res.results[0]
+      if (!match) {
+        hintEl.textContent = '✗ No match found'
+        hintEl.className = 'field-hint error'
+        return
+      }
+      resolved = match
+      localStorage.setItem(storageKey + '-id', match.id)
+      localStorage.setItem(storageKey + '-name', match.name)
+      hintEl.textContent = '✓ ' + match.name
+      hintEl.className = 'field-hint ok'
+    }
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(validate, 600)
+    })
+    return () => resolved
+  }
+
+  const getTwCategory   = setupCategoryValidation(twCategoryInput, twCategoryStatus, 'twitch-category', window.api.twitch.searchCategory)
+  const getKickCategory = setupCategoryValidation(kickCategoryInput, kickCategoryStatus, 'kick-category', window.api.kick.searchCategory)
 
   function setStatus(text, color) {
     statusEl.textContent = text
@@ -151,11 +229,21 @@ export function initObs() {
       return
     }
 
-    const title    = titleInput.value.trim()
-    const desc     = descInput.value.trim()
-    const category = categoryInput.value.trim()
-    const tags     = tagsInput.value.trim()
+    const title   = titleInput.value.trim()
+    const desc    = descInput.value.trim()
+    const allTags = parseTags(tagsInput.value)
     if (!title) { setStatus('Enter a stream title', '#e10600'); return }
+
+    // A typed-but-unresolved category means the platform doesn't know it —
+    // refuse instead of silently going live without one.
+    if (state.config.twitch?.refreshToken && twCategoryInput.value.trim() && !getTwCategory()) {
+      setStatus('Twitch category not resolved — check Stream Details', '#e10600')
+      return
+    }
+    if (state.config.kick?.refreshToken && kickCategoryInput.value.trim() && !getKickCategory()) {
+      setStatus('Kick category not resolved — check Stream Details', '#e10600')
+      return
+    }
     goLiveBtn.disabled = true
 
     let broadcastId = null
@@ -169,23 +257,35 @@ export function initObs() {
     // OBS pushes data, so any failure here aborts the whole go-live.
     if (state.config.youtube?.refreshToken) {
       setStatus('Setting up YouTube…', '')
-      const ytRes = await window.api.youtube.goLive({ title, description: desc })
+      const ytRes = await window.api.youtube.goLive({
+        title,
+        description: desc,
+        privacy:     ytPrivacyInput.value,
+        categoryId:  ytCategoryInput.value || undefined,
+        tags:        allTags
+      })
       if (!ytRes.ok) return abort('YouTube: ' + ytRes.error)
       broadcastId = ytRes.broadcastId
     }
 
     if (state.config.twitch?.refreshToken) {
       setStatus('Setting up Twitch…', '')
-      const twRes = await window.api.twitch.setTitle({ title, category, tags })
+      const twRes = await window.api.twitch.setTitle({
+        title,
+        categoryId: getTwCategory()?.id,
+        tags:       toTwitchTags(allTags),
+        language:   twLanguageInput.value
+      })
       if (!twRes.ok) return abort('Twitch: ' + twRes.error)
     }
 
     if (state.config.kick?.refreshToken) {
-      const kickTags = kickTagsInput.value.trim()
-        ? kickTagsInput.value.split(',').map(t => t.trim()).filter(Boolean)
-        : []
       setStatus('Setting up Kick…', '')
-      const kkRes = await window.api.kick.setTitle({ title, tags: kickTags })
+      const kkRes = await window.api.kick.setTitle({
+        title,
+        categoryId: getKickCategory()?.id,
+        tags:       allTags.slice(0, 10)
+      })
       if (!kkRes.ok) return abort('Kick: ' + kkRes.error)
     }
 

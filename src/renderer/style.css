@@ -1978,6 +1978,64 @@ html, body {
   flex-direction: column;
   gap: 12px;
   padding: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.modal-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.field-hint {
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  min-height: 12px;
+}
+.field-hint.ok    { color: #4caf50; }
+.field-hint.error { color: #e10600; }
+
+/* Stream Details modal: wider, two-column grid, larger controls */
+#stream-details-backdrop .modal {
+  width: 880px;
+  max-width: 94vw;
+}
+#stream-details-backdrop .modal-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+  padding: 18px;
+}
+#stream-details-backdrop .modal-section {
+  gap: 12px;
+  padding: 14px 16px;
+}
+#stream-details-backdrop .modal-section-title { font-size: 12px; }
+#stream-details-backdrop .modal-label { font-size: 12px; }
+#stream-details-backdrop .setup-input {
+  font-size: 14px;
+  padding: 9px 12px;
+}
+#stream-details-backdrop .setup-desc { min-height: 96px; }
+#stream-details-backdrop .field-hint { font-size: 11px; }
+
+@media (max-width: 900px) {
+  #stream-details-backdrop .modal-body { grid-template-columns: 1fr; }
 }
 
 .modal-label {
