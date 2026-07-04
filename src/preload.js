@@ -91,7 +91,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   facebook: {
     auth:            (appId, appSecret, configId) => ipcRenderer.invoke('facebook:auth', appId, appSecret, configId),
-    goLive:          (opts)             => ipcRenderer.invoke('facebook:goLive', opts),
+    publishPending:  (opts)             => ipcRenderer.invoke('facebook:publishPending', opts),
     deleteLiveVideo: (opts)             => ipcRenderer.invoke('facebook:deleteLiveVideo', opts)
   },
   tiktok: {

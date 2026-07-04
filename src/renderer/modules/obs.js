@@ -249,11 +249,9 @@ export function initObs() {
     }
     goLiveBtn.disabled = true
 
-    let broadcastId   = null
-    let fbLiveVideoId = null
+    let broadcastId = null
     async function abort(message) {
-      if (broadcastId)   await window.api.youtube.deleteBroadcast({ broadcastId })
-      if (fbLiveVideoId) await window.api.facebook.deleteLiveVideo({ liveVideoId: fbLiveVideoId })
+      if (broadcastId) await window.api.youtube.deleteBroadcast({ broadcastId })
       setStatus(message, '#e10600')
       goLiveBtn.disabled = false
     }
@@ -294,13 +292,6 @@ export function initObs() {
       if (!kkRes.ok) return abort('Kick: ' + kkRes.error)
     }
 
-    if (state.config.facebook?.pageToken) {
-      setStatus('Setting up Facebook…', '')
-      const fbRes = await window.api.facebook.goLive({ title, description: desc })
-      if (!fbRes.ok) return abort('Facebook: ' + fbRes.error)
-      fbLiveVideoId = fbRes.liveVideoId
-    }
-
     setStatus('Starting stream…', '')
     const obsRes = await window.api.obs.startStream()
     if (!obsRes.ok) return abort('OBS: ' + obsRes.error)
@@ -311,10 +302,41 @@ export function initObs() {
       state.loadYtStream(broadcastId)
       state.pollYtChat()
     }
+
+    // Facebook's draft broadcast only appears once OBS data reaches the
+    // persistent stream key, so it can't be part of the pre-OBS setup
+    if (state.config.facebook?.pageToken) pollFacebookPublish(title, desc)
   })
+
+  let fbPublishTimer = null
+  function pollFacebookPublish(title, description) {
+    if (fbPublishTimer) return
+    let attempts = 0
+    fbPublishTimer = setInterval(async () => {
+      attempts++
+      const res = await window.api.facebook.publishPending({ title, description })
+      if (res.ok && res.published) {
+        clearInterval(fbPublishTimer)
+        fbPublishTimer = null
+        console.log('[FB] Live post published')
+      } else if (!res.ok) {
+        clearInterval(fbPublishTimer)
+        fbPublishTimer = null
+        setStatus('FB: ' + res.error, '#e55')
+      } else if (attempts >= 24) {
+        clearInterval(fbPublishTimer)
+        fbPublishTimer = null
+        setStatus('FB: no incoming stream found — check OBS Facebook output', '#e55')
+      }
+    }, 5000)
+  }
 
   window.api.obs.onStreamState(active => {
     setLiveState(active)
+    if (!active && fbPublishTimer) {
+      clearInterval(fbPublishTimer)
+      fbPublishTimer = null
+    }
   })
   // ── Scene switcher ──
   const scenesEl = document.getElementById('obs-scenes')

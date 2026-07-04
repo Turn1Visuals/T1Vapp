@@ -1414,21 +1414,31 @@ ipcMain.handle('facebook:auth', (_, appId, appSecret, configId) => {
   })
 })
 
-ipcMain.handle('facebook:goLive', async (_, { title, description }) => {
+// Streaming to a page's persistent stream key makes Facebook create an
+// unpublished draft broadcast — find the one receiving our ingest, set the
+// metadata, and publish it. Pre-creating a live video via the API doesn't
+// work here: it gets its own one-off stream key that OBS never feeds.
+ipcMain.handle('facebook:publishPending', async (_, { title, description }) => {
   const cfg = loadConfig()
   const fb  = cfg.facebook || {}
   if (!fb.pageToken || !fb.pageId) return { ok: false, error: 'Not connected to Facebook' }
   try {
+    const res = await fetch(`${FB_GRAPH}/${fb.pageId}/live_videos?broadcast_status=["UNPUBLISHED"]&fields=id,status,creation_time,ingest_streams&limit=5&access_token=${fb.pageToken}`)
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.error.message }
+    const pending = (data.data || []).find(v => v.ingest_streams && v.ingest_streams.length)
+    if (!pending) return { ok: true, published: false }
+
     const params = new URLSearchParams({
       title,
       description:  description || '',
       status:       'LIVE_NOW',
       access_token: fb.pageToken
     })
-    const res  = await fetch(`${FB_GRAPH}/${fb.pageId}/live_videos`, { method: 'POST', body: params })
-    const data = await res.json()
-    if (data.error) return { ok: false, error: data.error.message }
-    return { ok: true, liveVideoId: data.id }
+    const upRes  = await fetch(`${FB_GRAPH}/${pending.id}`, { method: 'POST', body: params })
+    const upData = await upRes.json()
+    if (upData.error) return { ok: false, error: upData.error.message }
+    return { ok: true, published: true, liveVideoId: pending.id }
   } catch (e) { return { ok: false, error: e.message } }
 })
 
