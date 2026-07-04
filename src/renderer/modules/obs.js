@@ -303,42 +303,13 @@ export function initObs() {
       state.pollYtChat()
     }
 
-    // Facebook's draft broadcast only appears once OBS data reaches the
-    // persistent stream key, so it can't be part of the pre-OBS setup
-    if (state.config.facebook?.pageToken) pollFacebookPublish(title, desc)
+    // Facebook stays manual: the persistent stream key only feeds Live
+    // Producer's interactive flow (API-created broadcasts get their own
+    // key), so the post is created and published in the Facebook tab
   })
-
-  let fbPublishTimer = null
-  function pollFacebookPublish(title, description) {
-    if (fbPublishTimer) return
-    let attempts = 0
-    fbPublishTimer = setInterval(async () => {
-      attempts++
-      const res = await window.api.facebook.publishPending({ title, description })
-      if (res.ok && res.published) {
-        clearInterval(fbPublishTimer)
-        fbPublishTimer = null
-        state.currentFbLiveVideoId = res.liveVideoId
-        state.loadFbStream()
-        console.log('[FB] Live post published')
-      } else if (!res.ok) {
-        clearInterval(fbPublishTimer)
-        fbPublishTimer = null
-        setStatus('FB: ' + res.error, '#e55')
-      } else if (attempts >= 24) {
-        clearInterval(fbPublishTimer)
-        fbPublishTimer = null
-        setStatus('FB: no incoming stream found — check OBS Facebook output', '#e55')
-      }
-    }, 5000)
-  }
 
   window.api.obs.onStreamState(active => {
     setLiveState(active)
-    if (!active && fbPublishTimer) {
-      clearInterval(fbPublishTimer)
-      fbPublishTimer = null
-    }
   })
   // ── Scene switcher ──
   const scenesEl = document.getElementById('obs-scenes')
