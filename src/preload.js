@@ -145,6 +145,7 @@ contextBridge.exposeInMainWorld('api', {
     onCarData:      (cb)        => ipcRenderer.on('f1:cardata',         (_, d) => cb(d)),
     onReset:        (cb)        => ipcRenderer.on('f1:reset',           ()     => cb()),
     onLiveDisconnected: (cb)    => ipcRenderer.on('f1:liveDisconnected',()     => cb()),
+    onLiveStatus:       (cb)    => ipcRenderer.on('f1:liveStatus',      (_, d) => cb(d)),
     openLogin:      ()          => ipcRenderer.invoke('f1:openLogin'),
     authStatus:     ()          => ipcRenderer.invoke('f1:authStatus'),
     logout:         ()          => ipcRenderer.invoke('f1:logout'),
