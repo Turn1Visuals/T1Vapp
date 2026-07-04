@@ -318,6 +318,8 @@ export function initObs() {
       if (res.ok && res.published) {
         clearInterval(fbPublishTimer)
         fbPublishTimer = null
+        state.currentFbLiveVideoId = res.liveVideoId
+        state.loadFbStream()
         console.log('[FB] Live post published')
       } else if (!res.ok) {
         clearInterval(fbPublishTimer)

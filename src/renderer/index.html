@@ -56,6 +56,7 @@
               <button class="stream-tab" data-view="youtube">YouTube</button>
               <button class="stream-tab" data-view="twitch">Twitch</button>
               <button class="stream-tab" data-view="kick">Kick</button>
+              <button class="stream-tab" data-view="facebook">Facebook</button>
               <div class="stream-tab-actions">
                 <button id="btn-overlay-reload" class="btn-ghost" title="Reload overlay" style="display:none">↺</button>
                 <button id="btn-swap-layout" class="btn-ghost" title="Swap columns">⇄</button>
@@ -185,6 +186,11 @@
                 <div class="stream-header"><button id="btn-reload-kick-stream" class="btn-ghost" title="Reload stream">↻</button><button id="btn-kick-stream-login" class="btn-ghost" title="Log in to Kick">Login</button></div>
                 <webview id="kick-stream-wv" class="stream-webview" partition="persist:kickstream" useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" allowpopups></webview>
                 <div id="kick-stream-offline" class="stream-offline" style="display:none">No Kick channel configured — add your channel name in Settings</div>
+              </div>
+              <div id="stream-view-facebook" class="stream-view">
+                <div class="stream-header"><button id="btn-reload-fb-stream" class="btn-ghost" title="Reload stream">↻</button><button id="btn-fb-stream-login" class="btn-ghost" title="Log in to Facebook">Login</button></div>
+                <webview id="fb-stream-wv" class="stream-webview" partition="persist:fb-stream" allowpopups></webview>
+                <div id="fb-stream-offline" class="stream-offline" style="display:none">Facebook not connected — go to Settings to connect your page</div>
               </div>
             </div>
           </div>

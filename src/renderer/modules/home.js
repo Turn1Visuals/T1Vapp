@@ -20,9 +20,10 @@ export function initHomeStreams() {
     youtube:  document.getElementById('stream-view-youtube'),
     twitch:   document.getElementById('stream-view-twitch'),
     kick:     document.getElementById('stream-view-kick'),
+    facebook: document.getElementById('stream-view-facebook'),
   }
 
-  const streamTabIcons = { youtube: 'youtube', twitch: 'twitch', kick: 'kick' }
+  const streamTabIcons = { youtube: 'youtube', twitch: 'twitch', kick: 'kick', facebook: 'facebook' }
   tabs.forEach(tab => {
     const slug = streamTabIcons[tab.dataset.view]
     if (slug) {
@@ -40,9 +41,10 @@ export function initHomeStreams() {
       const target = tab.dataset.view
       Object.entries(views).forEach(([k, v]) => v.classList.toggle('active', k === target))
       overlayReloadBtn.style.display = target === 'overlay' ? '' : 'none'
-      if (target === 'youtube') state.loadYtStream()
-      if (target === 'twitch')  loadTwitchStream()
-      if (target === 'kick')    loadKickStream()
+      if (target === 'youtube')  state.loadYtStream()
+      if (target === 'twitch')   loadTwitchStream()
+      if (target === 'kick')     loadKickStream()
+      if (target === 'facebook') state.loadFbStream()
     })
   })
 
@@ -143,10 +145,33 @@ export function initHomeStreams() {
     kickStreamLoaded = true
   }
 
+  // ── Facebook stream tab ──
+  const fbStreamWv      = document.getElementById('fb-stream-wv')
+  const fbStreamOffline = document.getElementById('fb-stream-offline')
+  let fbStreamUrl = null
+
+  state.loadFbStream = function() {
+    if (!state.config.facebook?.pageToken) {
+      fbStreamOffline.style.display = ''
+      fbStreamWv.style.display = 'none'
+      return
+    }
+    fbStreamOffline.style.display = 'none'
+    fbStreamWv.style.display = ''
+    const url = state.currentFbLiveVideoId
+      ? `https://www.facebook.com/live/producer/${state.currentFbLiveVideoId}`
+      : 'https://www.facebook.com/live/producer'
+    if (fbStreamUrl !== url) {
+      fbStreamWv.src = url
+      fbStreamUrl = url
+    }
+  }
+
   // Stream reload buttons
   document.getElementById('btn-reload-yt-stream').addEventListener('click', () => ytStreamWv.reload())
   document.getElementById('btn-reload-twitch-stream').addEventListener('click', () => twitchStreamWv.reload())
   document.getElementById('btn-reload-kick-stream').addEventListener('click', () => kickStreamWv.reload())
+  document.getElementById('btn-reload-fb-stream').addEventListener('click', () => fbStreamWv.reload())
 
   // Stream login buttons
   let ytStreamLoginPending = false
@@ -213,6 +238,41 @@ export function initHomeStreams() {
         btn.textContent = '✓'
         twitchStreamWv.reload()
         twitchChatWv.reload()
+      } else {
+        btn.textContent = '✕'
+      }
+      setTimeout(() => {
+        btn.textContent = 'Login'
+        btn.disabled = false
+      }, 3000)
+    }
+  })
+
+  let fbStreamLoginPending = false
+  document.getElementById('btn-fb-stream-login').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-fb-stream-login')
+    if (!fbStreamLoginPending) {
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.siteLogin('https://www.facebook.com')
+      if (!res.ok) {
+        btn.textContent = 'Login'
+        btn.disabled = false
+        return
+      }
+      fbStreamLoginPending = true
+      btn.textContent = 'Done'
+      btn.disabled = false
+    } else {
+      btn.disabled = true
+      btn.textContent = '…'
+      const res = await window.api.browser.finishSiteLogin(['persist:fb-stream'])
+      fbStreamLoginPending = false
+      if (res.ok) {
+        state.config.facebook = { ...(state.config.facebook || {}), browserAuthenticated: true }
+        await saveConfig(state.config)
+        btn.textContent = '✓'
+        fbStreamWv.reload()
       } else {
         btn.textContent = '✕'
       }
