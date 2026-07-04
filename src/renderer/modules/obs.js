@@ -143,9 +143,6 @@ export function initObs() {
     }
   }
 
-  let pendingTwitchMeta = null
-  let pendingKickTitle  = null
-
   goLiveBtn.addEventListener('click', async () => {
     if (isLive) {
       goLiveBtn.disabled = true
@@ -161,67 +158,51 @@ export function initObs() {
     if (!title) { setStatus('Enter a stream title', '#e10600'); return }
     goLiveBtn.disabled = true
 
-    // Preflight: verify YouTube token is valid before starting OBS
-    if (state.config.youtube?.refreshToken) {
-      setStatus('Checking YouTube…', '')
-      const ytCheck = await window.api.youtube.getLiveBroadcast()
-      if (!ytCheck.ok && ytCheck.error !== 'No active broadcast') {
-        setStatus(`YouTube: ${ytCheck.error} — reconnect in Settings`, '#e10600')
-        goLiveBtn.disabled = false
-        return
-      }
+    let broadcastId = null
+    async function abort(message) {
+      if (broadcastId) await window.api.youtube.deleteBroadcast({ broadcastId })
+      setStatus(message, '#e10600')
+      goLiveBtn.disabled = false
     }
 
-    setStatus('Setting up…', '')
+    // All platform setup happens before OBS starts — nothing goes live until
+    // OBS pushes data, so any failure here aborts the whole go-live.
+    if (state.config.youtube?.refreshToken) {
+      setStatus('Setting up YouTube…', '')
+      const ytRes = await window.api.youtube.goLive({ title, description: desc })
+      if (!ytRes.ok) return abort('YouTube: ' + ytRes.error)
+      broadcastId = ytRes.broadcastId
+    }
 
     if (state.config.twitch?.refreshToken) {
-      pendingTwitchMeta = { title, category, tags }
+      setStatus('Setting up Twitch…', '')
+      const twRes = await window.api.twitch.setTitle({ title, category, tags })
+      if (!twRes.ok) return abort('Twitch: ' + twRes.error)
     }
+
     if (state.config.kick?.refreshToken) {
       const kickTags = kickTagsInput.value.trim()
         ? kickTagsInput.value.split(',').map(t => t.trim()).filter(Boolean)
         : []
-      pendingKickTitle = { title, tags: kickTags }
+      setStatus('Setting up Kick…', '')
+      const kkRes = await window.api.kick.setTitle({ title, tags: kickTags })
+      if (!kkRes.ok) return abort('Kick: ' + kkRes.error)
     }
 
-    const [obsRes, ytRes] = await Promise.all([
-      window.api.obs.startStream(),
-      window.api.youtube.goLive({ title, description: desc })
-    ])
+    setStatus('Starting stream…', '')
+    const obsRes = await window.api.obs.startStream()
+    if (!obsRes.ok) return abort('OBS: ' + obsRes.error)
 
-    if (!obsRes.ok) {
-      setStatus('OBS: ' + obsRes.error, '#e10600')
-      goLiveBtn.disabled = false
-      pendingTwitchMeta = null
-      pendingKickTitle  = null
-      return
-    }
-
-    if (ytRes.ok && ytRes.broadcastId) {
-      state.currentBroadcastId = ytRes.broadcastId
+    if (broadcastId) {
+      state.currentBroadcastId = broadcastId
       state.ytStreamLoaded = false
-      state.loadYtStream(ytRes.broadcastId)
+      state.loadYtStream(broadcastId)
+      state.pollYtChat()
     }
-
-    if (!ytRes.ok) setStatus('YT: ' + ytRes.error, '#e55')
   })
 
   window.api.obs.onStreamState(active => {
     setLiveState(active)
-    if (active && pendingTwitchMeta) {
-      const meta = pendingTwitchMeta
-      pendingTwitchMeta = null
-      window.api.twitch.setTitle(meta).then(res => {
-        if (!res.ok) setStatus('TW: ' + res.error, '#e55')
-      })
-    }
-    if (active && pendingKickTitle) {
-      const { title: kt, tags: kTags } = pendingKickTitle
-      pendingKickTitle = null
-      window.api.kick.setTitle({ title: kt, tags: kTags }).then(res => {
-        if (!res.ok) setStatus('Kick: ' + res.error, '#e55')
-      })
-    }
   })
   // ── Scene switcher ──
   const scenesEl = document.getElementById('obs-scenes')

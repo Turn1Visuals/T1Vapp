@@ -936,13 +936,22 @@ ipcMain.handle('youtube:goLive', async (_, { title, description }) => {
     if (broadcastData.error) return { ok: false, error: broadcastData.error.message }
     const broadcastId = broadcastData.id
 
+    const deleteBroadcast = () =>
+      fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts?id=${broadcastId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }).catch(() => {})
+
     // 2. Get default stream
     const streamsRes = await fetch('https://www.googleapis.com/youtube/v3/liveStreams?part=id&mine=true', {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     const streamsData = await streamsRes.json()
     const streamId = streamsData.items?.[0]?.id
-    if (!streamId) return { ok: false, error: 'No default stream found — set up a stream in YouTube Studio first' }
+    if (!streamId) {
+      await deleteBroadcast()
+      return { ok: false, error: 'No default stream found — set up a stream in YouTube Studio first' }
+    }
 
     // 3. Bind broadcast to stream
     const bindRes = await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts/bind?id=${broadcastId}&streamId=${streamId}&part=id`, {
@@ -950,9 +959,28 @@ ipcMain.handle('youtube:goLive', async (_, { title, description }) => {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     const bindData = await bindRes.json()
-    if (bindData.error) return { ok: false, error: bindData.error.message }
+    if (bindData.error) {
+      await deleteBroadcast()
+      return { ok: false, error: bindData.error.message }
+    }
 
     return { ok: true, broadcastId }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+})
+
+ipcMain.handle('youtube:deleteBroadcast', async (_, { broadcastId }) => {
+  const cfg = loadConfig()
+  const yt = cfg.youtube || {}
+  if (!yt.refreshToken) return { ok: false, error: 'Not connected' }
+  try {
+    const accessToken = await youtubeRefreshAccessToken(yt.clientId, yt.clientSecret, yt.refreshToken)
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/liveBroadcasts?id=${encodeURIComponent(broadcastId)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+    return res.ok ? { ok: true } : { ok: false, error: `HTTP ${res.status}` }
   } catch (e) {
     return { ok: false, error: e.message }
   }

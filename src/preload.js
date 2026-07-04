@@ -86,6 +86,7 @@ contextBridge.exposeInMainWorld('api', {
     getLiveBroadcast: ()        => ipcRenderer.invoke('youtube:getLiveBroadcast'),
     sendChat:         (opts)    => ipcRenderer.invoke('youtube:sendChat', opts),
     goLive:           (opts)    => ipcRenderer.invoke('youtube:goLive', opts),
+    deleteBroadcast:  (opts)    => ipcRenderer.invoke('youtube:deleteBroadcast', opts),
     getViewers:       (opts)    => ipcRenderer.invoke('youtube:getViewers', opts)
   },
   tiktok: {

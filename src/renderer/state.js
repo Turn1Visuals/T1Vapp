@@ -3,6 +3,7 @@ export const state = {
   ytStreamLoaded:    false,
   currentBroadcastId: null,
   loadYtStream:      () => {},
+  pollYtChat:        () => {},
   onObsConnected:    () => {},
   onObsDisconnected: () => {},
 }

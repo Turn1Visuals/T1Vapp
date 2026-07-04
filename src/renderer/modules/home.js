@@ -284,6 +284,28 @@ export function initHomeStreams() {
   btnLoadChat.addEventListener('click', loadYtChat)
   if (state.config.youtube?.refreshToken) loadYtChat()
 
+  // After go-live, the broadcast only becomes active once OBS data arrives —
+  // poll until it does, then load the chat.
+  let ytChatPollTimer = null
+  state.pollYtChat = function() {
+    if (ytChatPollTimer) return
+    let attempts = 0
+    ytChatPollTimer = setInterval(async () => {
+      attempts++
+      const res = await window.api.youtube.getLiveBroadcast()
+      if (res.ok) {
+        clearInterval(ytChatPollTimer)
+        ytChatPollTimer = null
+        currentLiveChatId = res.liveChatId
+        ytChatWv.src = `https://www.youtube.com/live_chat?v=${res.videoId}`
+      } else if (attempts >= 24) {
+        clearInterval(ytChatPollTimer)
+        ytChatPollTimer = null
+        console.warn('[YT chat] Broadcast never became active, giving up')
+      }
+    }, 5000)
+  }
+
   let ytChatLoginPending = false
   document.getElementById('btn-yt-chat-login').addEventListener('click', async () => {
     if (!ytChatLoginPending) {
