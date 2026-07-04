@@ -2257,28 +2257,6 @@ let f1LiveConnected   = false
 let f1LoadedPath      = null
 let f1Listeners     = new Set() // renderer webContents subscribed to state pushes
 
-// Live reconnect state — F1's SignalR endpoint is flaky, so retry connects and
-// auto-reconnect on unexpected drops instead of giving up
-const F1_MAX_CONNECT_ATTEMPTS = 6
-const F1_RECONNECT_BACKOFF_MS  = [1000, 2000, 4000, 8000, 15000, 15000]
-let f1IntentionalDisconnect = false
-let f1Reconnecting          = false
-let f1ReconnectTimer        = null
-
-function f1BackoffDelay(attempt) {
-  return F1_RECONNECT_BACKOFF_MS[Math.min(attempt - 1, F1_RECONNECT_BACKOFF_MS.length - 1)]
-}
-
-// Tear down the live feed for an intentional stop (user disconnect, load, unload)
-// so the drop handler doesn't try to auto-reconnect.
-function f1TeardownLive() {
-  f1IntentionalDisconnect = true
-  if (f1ReconnectTimer) { clearTimeout(f1ReconnectTimer); f1ReconnectTimer = null }
-  f1Reconnecting = false
-  if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null }
-  f1LiveConnected = false
-}
-
 // ── Session state persistence ─────────────────────────────────────────────────
 function f1StateFile() {
   return path.join(process.env.CACHE_DIR, '.session-state.json')
@@ -2454,7 +2432,7 @@ ipcMain.handle('f1:sessions', async (_, year) => {
 
 ipcMain.handle('f1:load', async (_, sessionPath) => {
   // Disconnect live feed first so it doesn't override playback
-  f1TeardownLive()
+  if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null; f1LiveConnected = false }
   const driverMapping = loadDriverMapping()
   const { timeline, streamStartUnix } = await loadSession(sessionPath, driverMapping)
   f1Playback   = new Playback(timeline, streamStartUnix)
@@ -2496,7 +2474,7 @@ ipcMain.handle('f1:status', () => {
 })
 
 ipcMain.handle('f1:unload', () => {
-  f1TeardownLive()
+  if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null; f1LiveConnected = false }
   f1Playback?.pause()
   if (f1LoadedPath === 'live') try { fs.unlinkSync(cachePath('live')) } catch {}
   f1Playback   = null
@@ -2507,12 +2485,19 @@ ipcMain.handle('f1:unload', () => {
 })
 
 // Clear live cache and start fresh, or attach to existing playback for restore
-// Wire a LiveFeed instance to the playback engine. `existingPlayback` truthy
-// means we're appending to an already-running session (restore or reconnect),
-// so skip clock re-calibration.
-function wireLiveFeed(feed, existingPlayback) {
-  let positionCalibrated = !!existingPlayback
-  feed.on('data', ({ topic, data }) => {
+async function startLiveFeed(existingPlayback = null) {
+  if (!existingPlayback) {
+    // Fresh connect — clear old live cache and start new playback
+    try { fs.unlinkSync(cachePath('live')) } catch {}
+    const streamStartUnix = Date.now()
+    f1Playback   = new Playback([], streamStartUnix)
+    f1LoadedPath = 'live'
+  }
+
+  f1LiveFeed = new LiveFeed()
+
+  let positionCalibrated = !!existingPlayback // skip re-calibration on restore
+  f1LiveFeed.on('data', ({ topic, data }) => {
     const now   = Date.now()
     const event = { offset: now - f1Playback.streamStartUnix, topic, data }
     f1Playback.appendLive(topic, data, now)
@@ -2529,118 +2514,39 @@ function wireLiveFeed(feed, existingPlayback) {
       }).catch(() => {})
     }
   })
-  feed.on('connected', () => {
+  f1LiveFeed.on('connected', () => {
     f1LiveConnected = true
-    f1Reconnecting  = false
     f1Playback.start(1)
-    f1Push('liveStatus', { state: 'connected' })
     console.log('[f1] live connected')
   })
-  feed.on('disconnected', () => {
-    if (feed !== f1LiveFeed) return // stale feed from a superseded attempt
+  f1LiveFeed.on('disconnected', () => {
     f1LiveConnected = false
+    f1LiveFeed      = null
     f1Playback?.pause()
-    if (f1IntentionalDisconnect) {
-      f1LiveFeed = null
-      f1Push('liveDisconnected', {})
-      console.log('[f1] live disconnected (intentional)')
-      return
-    }
-    console.warn('[f1] live feed dropped — attempting reconnect')
-    f1Push('liveStatus', { state: 'reconnecting' })
-    scheduleLiveReconnect()
+    f1Push('liveDisconnected', {})
+    console.log('[f1] live disconnected')
   })
-  feed.on('error', err => console.error('[f1] live error:', err.message))
-}
+  f1LiveFeed.on('error', err => console.error('[f1] live error:', err.message))
 
-// Single connect attempt: build a feed, wire it, connect. Throws on failure and
-// cleans up its own feed so a later stale event can't hijack reconnection.
-async function attemptLiveConnect(existingPlayback) {
-  const feed = new LiveFeed()
-  wireLiveFeed(feed, existingPlayback)
-  f1LiveFeed = feed
-  try {
-    await feed.connect()
-  } catch (e) {
-    if (f1LiveFeed === feed) f1LiveFeed = null
-    feed.disconnect()
-    throw e
-  }
-}
-
-// Auto-reconnect loop after an unexpected drop. Reuses the existing playback so
-// new events append to the session rather than restarting it.
-function scheduleLiveReconnect() {
-  if (f1Reconnecting) return
-  f1Reconnecting = true
-  let attempt = 0
-  const tryReconnect = async () => {
-    if (f1IntentionalDisconnect) { f1Reconnecting = false; return }
-    attempt++
-    try {
-      await attemptLiveConnect(f1Playback)
-      f1Reconnecting = false
-      console.log(`[f1] reconnected after ${attempt} attempt(s)`)
-    } catch (e) {
-      console.warn(`[f1] reconnect attempt ${attempt} failed: ${e.message}`)
-      if (attempt >= F1_MAX_CONNECT_ATTEMPTS) {
-        f1Reconnecting = false
-        f1LiveFeed = null
-        f1Push('liveDisconnected', {})
-        console.error('[f1] reconnect gave up')
-        return
-      }
-      f1Push('liveStatus', { state: 'reconnecting', attempt: attempt + 1 })
-      f1ReconnectTimer = setTimeout(tryReconnect, f1BackoffDelay(attempt))
-    }
-  }
-  tryReconnect()
-}
-
-async function startLiveFeed(existingPlayback = null) {
-  if (!existingPlayback) {
-    // Fresh connect — clear old live cache and start new playback
-    try { fs.unlinkSync(cachePath('live')) } catch {}
-    const streamStartUnix = Date.now()
-    f1Playback   = new Playback([], streamStartUnix)
-    f1LoadedPath = 'live'
-  }
-  f1IntentionalDisconnect = false
-
-  // Retry the initial connect — F1's SignalR endpoint often fails the first try
-  let lastErr
-  for (let attempt = 1; attempt <= F1_MAX_CONNECT_ATTEMPTS; attempt++) {
-    if (f1IntentionalDisconnect) throw new Error('Connect cancelled')
-    try {
-      await attemptLiveConnect(existingPlayback)
-      return
-    } catch (e) {
-      lastErr = e
-      if (attempt < F1_MAX_CONNECT_ATTEMPTS) {
-        const delay = f1BackoffDelay(attempt)
-        console.warn(`[f1] connect attempt ${attempt} failed (${e.message}) — retrying in ${delay}ms`)
-        f1Push('liveStatus', { state: 'connecting', attempt: attempt + 1 })
-        await new Promise(r => setTimeout(r, delay))
-      }
-    }
-  }
-  throw lastErr
+  await f1LiveFeed.connect()
 }
 
 ipcMain.handle('f1:liveConnect', async () => {
   if (f1LiveFeed && f1LiveConnected) return { ok: true, already: true }
-  f1TeardownLive()
+  if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null }
   try {
     await startLiveFeed()
     return { ok: true }
   } catch (e) {
-    f1TeardownLive()
+    if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null }
     return { ok: false, error: e.message ?? 'Failed to connect' }
   }
 })
 
 ipcMain.handle('f1:liveDisconnect', () => {
-  f1TeardownLive()
+  f1LiveFeed?.disconnect()
+  f1LiveFeed      = null
+  f1LiveConnected = false
   return { ok: true }
 })
 
@@ -2914,7 +2820,7 @@ http.createServer((req, res) => {
     return
   }
   if (req.method === 'POST' && url.pathname === '/f1/unload') {
-    f1TeardownLive()
+    if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null; f1LiveConnected = false }
     f1Playback?.pause()
     if (f1LoadedPath === 'live') try { fs.unlinkSync(cachePath('live')) } catch {}
     f1Playback   = null

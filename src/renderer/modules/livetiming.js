@@ -344,18 +344,6 @@ export function initLiveTiming() {
     setLoaded(false)
   })
 
-  // Auto-connect/reconnect progress — stay in live mode, just show status
-  window.api.f1.onLiveStatus((s) => {
-    if (!s) return
-    if (s.state === 'connected') {
-      if (liveMode) setStatus('Live', true)
-    } else if (s.state === 'reconnecting') {
-      setStatus(s.attempt ? `Reconnecting… (attempt ${s.attempt})` : 'Reconnecting…')
-    } else if (s.state === 'connecting') {
-      setStatus(s.attempt ? `Connecting… (attempt ${s.attempt})` : 'Connecting to live feed…')
-    }
-  })
-
   function updateClock(clock) {
     if (!clock) return
     setPlayBtn(!clock.paused)
