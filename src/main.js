@@ -4,6 +4,7 @@ const fs = require('fs')
 const http = require('http')
 const { exec, spawn } = require('child_process')
 const OBSWebSocket = require('obs-websocket-js').default
+const PORTS = require('./ports')
 
 app.commandLine.appendSwitch('disable-features', 'SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,BlockThirdPartyCookies')
 
@@ -29,8 +30,8 @@ function loadConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
     const defaults = {
       launchers: [],
-      obs: { host: 'localhost', port: 4455, password: '' },
-      overlayUrl: 'http://localhost:5173/',
+      obs: { host: 'localhost', port: PORTS.OBS_PORT, password: '' },
+      overlayUrl: PORTS.OVERLAY_URL,
       browserTabs: [],
       windowBounds: { width: 1280, height: 800 },
       overlayMessage: { text: '', visible: false }
@@ -334,7 +335,7 @@ ipcMain.handle('driverMapping:save', (_, mapping) => {
 ipcMain.handle('obs:connect', async () => {
   const config = loadConfig()
   const { host, port, password } = config.obs || {}
-  const url = `ws://${host || 'localhost'}:${port || 4455}`
+  const url = `ws://${host || 'localhost'}:${port || PORTS.OBS_PORT}`
   console.log('[OBS] Attempting connection to:', url)
   try {
     await obs.connect(url, password || undefined)
@@ -649,7 +650,7 @@ ipcMain.handle('media:readJson', (_, filePath) => {
 })
 
 // ── YouTube OAuth ─────────────────────────────────────────────────────────────
-const YOUTUBE_REDIRECT_PORT = 8985
+const YOUTUBE_REDIRECT_PORT = PORTS.YOUTUBE_REDIRECT_PORT
 const YOUTUBE_REDIRECT_URI  = `http://localhost:${YOUTUBE_REDIRECT_PORT}`
 const YOUTUBE_SCOPES        = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube'
 
@@ -802,7 +803,7 @@ ipcMain.handle('youtube:upload', async (_, { filePath, title, description, tags,
 
 // ── TikTok OAuth + Upload ─────────────────────────────────────────────────────
 const TIKTOK_REDIRECT_URI  = 'https://turn1visuals.com/t1v-app/tiktok-callback'
-const TIKTOK_LOCAL_PORT    = 8986
+const TIKTOK_LOCAL_PORT    = PORTS.TIKTOK_REDIRECT_PORT
 
 ipcMain.handle('tiktok:auth', (_, clientKey, clientSecret) => {
   return new Promise((resolve) => {
@@ -1015,7 +1016,7 @@ ipcMain.handle('youtube:deleteBroadcast', async (_, { broadcastId }) => {
 
 
 // ── Twitch OAuth + Chat ───────────────────────────────────────────────────────
-const TWITCH_REDIRECT_PORT = 80
+const TWITCH_REDIRECT_PORT = PORTS.TWITCH_REDIRECT_PORT
 const TWITCH_REDIRECT_URI  = `http://localhost`
 
 ipcMain.handle('twitch:auth', (_, clientId, clientSecret) => {
@@ -1219,7 +1220,7 @@ ipcMain.handle('twitch:getViewers', async () => {
 })
 
 // ── Kick ────────────────────────────────────────────────────────────────────
-const KICK_REDIRECT_PORT = 80
+const KICK_REDIRECT_PORT = PORTS.KICK_REDIRECT_PORT
 const KICK_REDIRECT_URI  = 'http://localhost'
 
 function kickCodeVerifier() {
@@ -1342,7 +1343,7 @@ ipcMain.handle('kick:setTitle', async (_, { title, categoryId, tags }) => {
 })
 
 // ── Facebook ─────────────────────────────────────────────────────────────────
-const FB_REDIRECT_PORT = 8986
+const FB_REDIRECT_PORT = PORTS.FB_REDIRECT_PORT
 const FB_REDIRECT_URI  = `http://localhost:${FB_REDIRECT_PORT}/`
 const FB_GRAPH         = 'https://graph.facebook.com/v23.0'
 
@@ -1683,7 +1684,7 @@ async function importGoogleCookiesViaCDP() {
   } catch (e) { if (e.message.includes('Chrome is still running')) throw e }
 
   const srcUserDataDir = path.join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'User Data')
-  const debugPort      = 9223
+  const debugPort      = PORTS.DEBUG_PORT_COOKIE_IMPORT
   const chromeErrors   = []
 
   // Read profile display names from Local State
@@ -1801,7 +1802,7 @@ ipcMain.handle('browser:googleSignIn', async () => {
   googleSignInTempDir = path.join(app.getPath('temp'), `t1v_gsignin_${Date.now()}`)
   fs.mkdirSync(googleSignInTempDir, { recursive: true })
 
-  const debugPort = 9224
+  const debugPort = PORTS.DEBUG_PORT_GOOGLE_SIGNIN
   googleSignInChrome = spawn(chromePath, [
     `--remote-debugging-port=${debugPort}`,
     `--user-data-dir=${googleSignInTempDir}`,
@@ -1826,7 +1827,7 @@ ipcMain.handle('browser:googleSignIn', async () => {
 
 ipcMain.handle('browser:finishGoogleSignIn', async () => {
   if (!googleSignInChrome) return { ok: false, error: 'No sign-in session active' }
-  const debugPort = 9224
+  const debugPort = PORTS.DEBUG_PORT_GOOGLE_SIGNIN
   try {
     const version = await new Promise((resolve, reject) => {
       require('http').get(`http://127.0.0.1:${debugPort}/json/version`, res => {
@@ -1903,7 +1904,7 @@ ipcMain.handle('browser:siteLogin', async (_, url) => {
   siteLoginTempDir = path.join(app.getPath('temp'), `t1v_sitelogin_${Date.now()}`)
   fs.mkdirSync(siteLoginTempDir, { recursive: true })
 
-  const debugPort = 9225
+  const debugPort = PORTS.DEBUG_PORT_SITE_LOGIN
   console.log(`[site-login] Spawning Chrome for ${siteLoginDomain}...`)
   siteLoginChrome = spawn(chromePath, [
     `--remote-debugging-port=${debugPort}`,
@@ -1954,7 +1955,7 @@ ipcMain.handle('browser:injectCookie', async (_, partition, domain, name, value)
 ipcMain.handle('browser:finishSiteLogin', async (_, partitions = ['persist:browser']) => {
   if (!siteLoginChrome) return { ok: false, error: 'No login session active' }
   if (siteLoginChrome.killed) return { ok: false, error: 'Chrome window was closed — please keep it open until you click Done' }
-  const debugPort = 9225
+  const debugPort = PORTS.DEBUG_PORT_SITE_LOGIN
   // Ensure partitions is always an array
   const partitionList = Array.isArray(partitions) ? partitions : [partitions]
 
@@ -2726,7 +2727,7 @@ ipcMain.handle('clipboard:write', (_, text) => {
 
 // ── Overlay HTTP server ───────────────────────────────────────────────────────
 
-const OVERLAY_PORT = 47200
+const OVERLAY_PORT = PORTS.OVERLAY_PORT
 const OVERLAY_DIST  = path.join(__dirname, '../ui/dist')
 const SHARED_FONTS  = path.join(__dirname, '../shared/fonts')
 

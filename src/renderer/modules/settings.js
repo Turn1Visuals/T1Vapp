@@ -54,7 +54,7 @@ export function initSettings() {
   const overlayInput = document.getElementById('overlay-url-input')
   const overlayBtn   = document.getElementById('btn-save-overlay')
 
-  overlayInput.value    = state.config.overlayUrl || 'http://localhost:5173/'
+  overlayInput.value    = state.config.overlayUrl || 'http://localhost:47200/'
   overlayInput.disabled = true
 
   overlayBtn.addEventListener('click', () => {
@@ -64,7 +64,7 @@ export function initSettings() {
       overlayBtn.className = 'btn-primary'
       overlayInput.focus()
     } else {
-      state.config.overlayUrl = overlayInput.value.trim() || 'http://localhost:5173/'
+      state.config.overlayUrl = overlayInput.value.trim() || 'http://localhost:47200/'
       saveConfig()
       overlayInput.disabled = true
       overlayBtn.textContent = 'Edit Overlay URL'

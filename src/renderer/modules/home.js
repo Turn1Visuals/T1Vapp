@@ -53,7 +53,7 @@ export function initHomeStreams() {
   const overlayWv       = document.getElementById('overlay-webview')
   const overlayReloadBtn = document.getElementById('btn-overlay-reload')
   const offlineEl = document.getElementById('overlay-offline')
-  const overlayUrl = state.config.overlayUrl || 'http://localhost:5173/'
+  const overlayUrl = state.config.overlayUrl || 'http://localhost:47200/'
   let overlayShown = false
 
   function applyScale() {
