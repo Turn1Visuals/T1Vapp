@@ -9,13 +9,13 @@ for (const line of readFileSync(new URL('../.env', import.meta.url), 'utf8').spl
   if (m) ports[m[1]] = m[2];
 }
 
-const backend = `http://localhost:${ports.OVERLAY_PORT || 47200}`;
+const backend = `http://localhost:${ports.OVERLAY_PORT || 8987}`;
 
 export default defineConfig({
   plugins: [react()],
   base: '/',
   server: {
-    port: Number(ports.UI_DEV_PORT) || 5174,
+    port: Number(ports.UI_DEV_PORT) || 8988,
     strictPort: true,
     proxy: {
       '/auth': backend,
