@@ -26,9 +26,9 @@ class LiveFeed extends EventEmitter {
     console.log('  Authenticating with F1...');
     this._token = await getToken();
     console.log('  Negotiating SignalR Core connection...');
-    const { connectionToken } = await this._negotiate();
+    const { connectionToken, cookies } = await this._negotiate();
     console.log('  Connecting WebSocket...');
-    await this._connectWs(connectionToken);
+    await this._connectWs(connectionToken, cookies);
   }
 
   disconnect() {
@@ -40,18 +40,22 @@ class LiveFeed extends EventEmitter {
     const headers = { ...BASE_HEADERS, 'Authorization': `Bearer ${this._token}` };
     const res     = await fetch(`${HUB_URL}/negotiate?negotiateVersion=1`, { method: 'POST', headers });
     if (!res.ok) throw new Error(`Negotiate failed: ${res.status} ${await res.text()}`);
+    // The hub sits behind a sticky AWS ALB — the websocket upgrade must echo
+    // the AWSALB cookies, or it only connects when it happens to land on the
+    // same backend as the negotiate (the "works after a few retries" symptom).
+    const cookies = res.headers.getSetCookie().map(c => c.split(';')[0]).join('; ');
     const body = await res.json();
     console.log('  Negotiate response:', JSON.stringify(body).slice(0, 200));
     const connectionToken = body.connectionToken ?? body.connectionId;
     if (!connectionToken) throw new Error('No connectionToken in negotiate response');
-    return { connectionToken };
+    return { connectionToken, cookies };
   }
 
-  _connectWs(connectionToken) {
+  _connectWs(connectionToken, cookies) {
     return new Promise((resolve, reject) => {
       const qs = new URLSearchParams({ id: connectionToken });
       const wsUrl = `${HUB_URL.replace('https://', 'wss://')}?${qs}`;
-      const headers = { ...BASE_HEADERS, 'Authorization': `Bearer ${this._token}` };
+      const headers = { ...BASE_HEADERS, 'Authorization': `Bearer ${this._token}`, 'Cookie': cookies };
       this._ws = new WebSocket(wsUrl, { headers });
       this._ws.once('open', () => { this._handshake(); resolve(); });
       this._ws.once('error', err => {
