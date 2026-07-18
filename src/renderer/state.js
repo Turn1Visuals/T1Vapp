@@ -5,6 +5,7 @@ export const state = {
   loadYtStream:      () => {},
   pollYtChat:        () => {},
   currentFbLiveVideoId: null,
+  currentFbBroadcastId: null,
   loadFbStream:      () => {},
   onObsConnected:    () => {},
   onObsDisconnected: () => {},

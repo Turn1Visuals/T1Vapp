@@ -1415,31 +1415,109 @@ ipcMain.handle('facebook:auth', (_, appId, appSecret, configId) => {
   })
 })
 
-// Streaming to a page's persistent stream key makes Facebook create an
-// unpublished draft broadcast — find the one receiving our ingest, set the
-// metadata, and publish it. Pre-creating a live video via the API doesn't
-// work here: it gets its own one-off stream key that OBS never feeds.
-ipcMain.handle('facebook:publishPending', async (_, { title, description }) => {
+// Create an unpublished broadcast, then point OBS's main output at its
+// one-off stream key. The persistent stream key can't be used here: it only
+// feeds Live Producer's own sessions, never API-created broadcasts.
+ipcMain.handle('facebook:goLive', async (_, { title, description }) => {
+  const cfg = loadConfig()
+  const fb  = cfg.facebook || {}
+  if (!fb.pageToken || !fb.pageId) return { ok: false, error: 'Not connected to Facebook' }
+  if (!obsConnected) return { ok: false, error: 'OBS not connected' }
+  try {
+    const params = new URLSearchParams({
+      status:       'UNPUBLISHED',
+      title,
+      description:  description || '',
+      fields:       'id,secure_stream_url,video{id}',
+      access_token: fb.pageToken
+    })
+    const res  = await fetch(`${FB_GRAPH}/${fb.pageId}/live_videos`, { method: 'POST', body: params })
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.error.message }
+    const streamUrl = data.secure_stream_url
+    if (!streamUrl) return { ok: false, error: 'No stream URL in create response' }
+
+    // rtmps://live-api-s.facebook.com:443/rtmp/<key> — the key part may
+    // itself contain query params, so split on the last path slash
+    const cut    = streamUrl.lastIndexOf('/') + 1
+    const server = streamUrl.slice(0, cut)
+    const key    = streamUrl.slice(cut)
+    await obs.call('SetStreamServiceSettings', {
+      streamServiceType:     'rtmp_custom',
+      streamServiceSettings: { server, key, use_auth: false }
+    })
+    return { ok: true, liveVideoId: data.id, videoId: data.video?.id }
+  } catch (e) { return { ok: false, error: e.message } }
+})
+
+// Wait until Facebook sees our ingest, then flip the broadcast live.
+// LIVE_NOW before ingest exists would publish a black stream.
+ipcMain.handle('facebook:publishWhenReady', async (_, { liveVideoId }) => {
+  const cfg = loadConfig()
+  const fb  = cfg.facebook || {}
+  if (!fb.pageToken) return { ok: false, error: 'Not connected to Facebook' }
+  try {
+    const deadline = Date.now() + 60000
+    while (Date.now() < deadline) {
+      const res  = await fetch(`${FB_GRAPH}/${liveVideoId}?fields=ingest_streams{stream_health}&access_token=${fb.pageToken}`)
+      const data = await res.json()
+      if (data.error) return { ok: false, error: data.error.message }
+      if (data.ingest_streams?.length) {
+        const pubRes  = await fetch(`${FB_GRAPH}/${liveVideoId}`, {
+          method: 'POST',
+          body:   new URLSearchParams({ status: 'LIVE_NOW', access_token: fb.pageToken })
+        })
+        const pubData = await pubRes.json()
+        if (pubData.error) return { ok: false, error: pubData.error.message }
+        return { ok: true }
+      }
+      await new Promise(r => setTimeout(r, 3000))
+    }
+    return { ok: false, error: 'Timed out waiting for ingest — broadcast not published' }
+  } catch (e) { return { ok: false, error: e.message } }
+})
+
+ipcMain.handle('facebook:endLive', async (_, { liveVideoId }) => {
+  const cfg = loadConfig()
+  const fb  = cfg.facebook || {}
+  if (!fb.pageToken) return { ok: false, error: 'Not connected to Facebook' }
+  try {
+    const res  = await fetch(`${FB_GRAPH}/${liveVideoId}`, {
+      method: 'POST',
+      body:   new URLSearchParams({ end_live_video: 'true', access_token: fb.pageToken })
+    })
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.error.message }
+    return { ok: true }
+  } catch (e) { return { ok: false, error: e.message } }
+})
+
+// Re-adopt a broadcast that's still live after an app restart — API-created
+// broadcasts are visible on this edge (Producer persistent-key drafts aren't)
+ipcMain.handle('facebook:recoverLive', async () => {
   const cfg = loadConfig()
   const fb  = cfg.facebook || {}
   if (!fb.pageToken || !fb.pageId) return { ok: false, error: 'Not connected to Facebook' }
   try {
-    const res = await fetch(`${FB_GRAPH}/${fb.pageId}/live_videos?broadcast_status=["UNPUBLISHED"]&fields=id,status,creation_time,ingest_streams&limit=5&access_token=${fb.pageToken}`)
+    const res  = await fetch(`${FB_GRAPH}/${fb.pageId}/live_videos?broadcast_status=["LIVE"]&fields=id,video{id}&limit=1&access_token=${fb.pageToken}`)
     const data = await res.json()
     if (data.error) return { ok: false, error: data.error.message }
-    const pending = (data.data || []).find(v => v.ingest_streams && v.ingest_streams.length)
-    if (!pending) return { ok: true, published: false }
+    const live = (data.data || [])[0]
+    if (!live) return { ok: true, live: false }
+    return { ok: true, live: true, liveVideoId: live.id, videoId: live.video?.id }
+  } catch (e) { return { ok: false, error: e.message } }
+})
 
-    const params = new URLSearchParams({
-      title,
-      description:  description || '',
-      status:       'LIVE_NOW',
-      access_token: fb.pageToken
-    })
-    const upRes  = await fetch(`${FB_GRAPH}/${pending.id}`, { method: 'POST', body: params })
-    const upData = await upRes.json()
-    if (upData.error) return { ok: false, error: upData.error.message }
-    return { ok: true, published: true, liveVideoId: pending.id }
+ipcMain.handle('facebook:getViewers', async (_, { liveVideoId }) => {
+  const cfg = loadConfig()
+  const fb  = cfg.facebook || {}
+  if (!fb.pageToken) return { ok: false, error: 'Not connected to Facebook' }
+  try {
+    const res  = await fetch(`${FB_GRAPH}/${liveVideoId}?fields=live_views,status&access_token=${fb.pageToken}`)
+    const data = await res.json()
+    if (data.error) return { ok: false, error: data.error.message }
+    if (data.status !== 'LIVE') return { ok: false, error: 'Not live' }
+    return { ok: true, viewers: data.live_views || 0 }
   } catch (e) { return { ok: false, error: e.message } }
 })
 

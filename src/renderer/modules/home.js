@@ -571,9 +571,11 @@ export function initHomeStreams() {
   const ytViewersRow   = document.getElementById('yt-viewers-row')
   const twViewersRow   = document.getElementById('tw-viewers-row')
   const kickViewersRow = document.getElementById('kick-viewers-row')
+  const fbViewersRow   = document.getElementById('fb-viewers-row')
   const ytViewersCount   = document.getElementById('yt-viewers-count')
   const twViewersCount   = document.getElementById('tw-viewers-count')
   const kickViewersCount = document.getElementById('kick-viewers-count')
+  const fbViewersCount   = document.getElementById('fb-viewers-count')
 
   function fmtViewers(n) {
     if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
@@ -611,6 +613,14 @@ export function initHomeStreams() {
       const res = await window.api.kick.getViewers({ channel: state.config.kick.channel })
       if (res.ok && res.viewers != null) { kickViewersCount.textContent = fmtViewers(res.viewers); kickViewersRow.style.display = '' }
       else kickViewersRow.style.display = 'none'
+    }
+    // Facebook
+    if (state.currentFbBroadcastId) {
+      const res = await window.api.facebook.getViewers({ liveVideoId: state.currentFbBroadcastId })
+      if (res.ok) { fbViewersCount.textContent = fmtViewers(res.viewers); fbViewersRow.style.display = '' }
+      else fbViewersRow.style.display = 'none'
+    } else {
+      fbViewersRow.style.display = 'none'
     }
   }
 

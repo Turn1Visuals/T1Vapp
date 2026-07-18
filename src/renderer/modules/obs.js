@@ -183,6 +183,18 @@ export function initObs() {
 
   function stopStats() { clearInterval(statsTimer); statsTimer = null }
 
+  // After an app restart mid-stream, re-adopt the Facebook broadcast so the
+  // viewers badge, producer tab and End Stream keep working
+  async function recoverFbLive() {
+    if (!state.config.facebook?.pageToken || state.currentFbBroadcastId) return
+    const res = await window.api.facebook.recoverLive()
+    if (res.ok && res.live) {
+      state.currentFbBroadcastId = res.liveVideoId
+      state.currentFbLiveVideoId = res.videoId
+      state.loadFbStream()
+    }
+  }
+
   let reconnectTimer = null
 
   function scheduleReconnect() {
@@ -195,6 +207,7 @@ export function initObs() {
         const status = await window.api.obs.getStatus()
         setLiveState(status.streaming)
         if (!status.streaming) setStatus('Connected', '#4caf50')
+        else recoverFbLive()
         startStats()
         const [scenesRes, currentRes] = await Promise.all([
           window.api.obs.getScenes(),
@@ -217,6 +230,7 @@ export function initObs() {
       const status = await window.api.obs.getStatus()
       setLiveState(status.streaming)
       if (!status.streaming) setStatus('Connected', '#4caf50')
+      else recoverFbLive()
     } else {
       setStatus('OBS not connected', '#e10600')
       goLiveBtn.disabled = true
@@ -228,7 +242,13 @@ export function initObs() {
     if (isLive) {
       goLiveBtn.disabled = true
       const res = await window.api.obs.stopStream()
-      if (!res.ok) { setStatus('OBS: ' + res.error, '#e10600'); goLiveBtn.disabled = false }
+      if (!res.ok) { setStatus('OBS: ' + res.error, '#e10600'); goLiveBtn.disabled = false; return }
+      if (state.currentFbBroadcastId) {
+        const fbRes = await window.api.facebook.endLive({ liveVideoId: state.currentFbBroadcastId })
+        if (!fbRes.ok) setStatus('Facebook end failed: ' + fbRes.error, '#e10600')
+        state.currentFbBroadcastId = null
+        state.currentFbLiveVideoId = null
+      }
       return
     }
 
@@ -250,8 +270,10 @@ export function initObs() {
     goLiveBtn.disabled = true
 
     let broadcastId = null
+    let fbLive = null
     async function abort(message) {
       if (broadcastId) await window.api.youtube.deleteBroadcast({ broadcastId })
+      if (fbLive) await window.api.facebook.deleteLiveVideo({ liveVideoId: fbLive.videoId })
       setStatus(message, '#e10600')
       goLiveBtn.disabled = false
     }
@@ -292,6 +314,15 @@ export function initObs() {
       if (!kkRes.ok) return abort('Kick: ' + kkRes.error)
     }
 
+    // Creates the broadcast AND points OBS's main output at its stream key,
+    // so this must run before StartStream
+    if (state.config.facebook?.pageToken) {
+      setStatus('Setting up Facebook…', '')
+      const fbRes = await window.api.facebook.goLive({ title, description: desc })
+      if (!fbRes.ok) return abort('Facebook: ' + fbRes.error)
+      fbLive = fbRes
+    }
+
     setStatus('Starting stream…', '')
     const obsRes = await window.api.obs.startStream()
     if (!obsRes.ok) return abort('OBS: ' + obsRes.error)
@@ -303,9 +334,15 @@ export function initObs() {
       state.pollYtChat()
     }
 
-    // Facebook stays manual: the persistent stream key only feeds Live
-    // Producer's interactive flow (API-created broadcasts get their own
-    // key), so the post is created and published in the Facebook tab
+    if (fbLive) {
+      state.currentFbBroadcastId = fbLive.liveVideoId
+      state.currentFbLiveVideoId = fbLive.videoId
+      state.loadFbStream()
+      setStatus('Waiting for Facebook ingest…', '')
+      const pubRes = await window.api.facebook.publishWhenReady({ liveVideoId: fbLive.liveVideoId })
+      if (pubRes.ok) setStatus('Live', '#e10600')
+      else setStatus('Facebook publish failed: ' + pubRes.error, '#e10600')
+    }
   })
 
   window.api.obs.onStreamState(active => {
