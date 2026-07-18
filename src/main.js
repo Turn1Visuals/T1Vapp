@@ -1342,6 +1342,40 @@ ipcMain.handle('kick:setTitle', async (_, { title, categoryId, tags }) => {
   } catch (e) { return { ok: false, error: e.message } }
 })
 
+// ── Chat popout window ───────────────────────────────────────────────────────
+let chatPopoutWindow = null
+
+ipcMain.handle('chat:openPopout', () => {
+  if (chatPopoutWindow && !chatPopoutWindow.isDestroyed()) {
+    chatPopoutWindow.focus()
+    return { ok: true }
+  }
+  chatPopoutWindow = new BrowserWindow({
+    width: 1100,
+    height: 700,
+    title: 'Chats',
+    autoHideMenuBar: true,
+    backgroundColor: '#0e0e0e',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      webviewTag: true
+    }
+  })
+  chatPopoutWindow.loadFile(path.join(__dirname, 'renderer', 'chat-popout.html'))
+  chatPopoutWindow.on('closed', () => {
+    chatPopoutWindow = null
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('chat:popoutClosed')
+  })
+  return { ok: true }
+})
+
+ipcMain.handle('chat:closePopout', () => {
+  if (chatPopoutWindow && !chatPopoutWindow.isDestroyed()) chatPopoutWindow.close()
+  return { ok: true }
+})
+
 // ── Facebook ─────────────────────────────────────────────────────────────────
 const FB_REDIRECT_PORT = PORTS.FB_REDIRECT_PORT
 const FB_REDIRECT_URI  = `http://localhost:${FB_REDIRECT_PORT}/`

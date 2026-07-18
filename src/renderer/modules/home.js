@@ -567,6 +567,39 @@ export function initHomeStreams() {
   btnSendBoth.addEventListener('click', () => handleSend([sendToYt, sendToTwitch, sendToKick]))
   chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend([sendToYt, sendToTwitch, sendToKick]) })
 
+  // ── Chat popout ──
+  const chatColsRow    = document.querySelector('.chat-cols-row')
+  const chatSendBar    = document.querySelector('.chat-send-bar')
+  const chatPoppedNote = document.getElementById('chat-popped-note')
+  let savedChatSrcs = null
+
+  document.getElementById('btn-popout-chats').addEventListener('click', async () => {
+    const res = await window.api.chat.openPopout()
+    if (!res.ok) return
+    // Unload the embedded chats so they don't run twice
+    savedChatSrcs = { yt: ytChatWv.src, twitch: twitchChatWv.src, kick: kickChatWv.src }
+    for (const wv of [ytChatWv, twitchChatWv, kickChatWv]) {
+      if (wv.src && wv.src !== 'about:blank') wv.src = 'about:blank'
+    }
+    chatColsRow.style.display = 'none'
+    chatSendBar.style.display = 'none'
+    chatPoppedNote.style.display = ''
+  })
+
+  window.api.chat.onPopoutClosed(() => {
+    if (savedChatSrcs) {
+      if (savedChatSrcs.yt && savedChatSrcs.yt !== 'about:blank') ytChatWv.src = savedChatSrcs.yt
+      if (savedChatSrcs.twitch && savedChatSrcs.twitch !== 'about:blank') twitchChatWv.src = savedChatSrcs.twitch
+      if (savedChatSrcs.kick && savedChatSrcs.kick !== 'about:blank') kickChatWv.src = savedChatSrcs.kick
+      savedChatSrcs = null
+    }
+    chatColsRow.style.display = ''
+    chatSendBar.style.display = ''
+    chatPoppedNote.style.display = 'none'
+  })
+
+  document.getElementById('btn-restore-chats').addEventListener('click', () => window.api.chat.closePopout())
+
   // ── Platform viewer stats ──
   const ytViewersRow   = document.getElementById('yt-viewers-row')
   const twViewersRow   = document.getElementById('tw-viewers-row')

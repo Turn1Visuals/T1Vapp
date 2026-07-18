@@ -89,6 +89,11 @@ contextBridge.exposeInMainWorld('api', {
     deleteBroadcast:  (opts)    => ipcRenderer.invoke('youtube:deleteBroadcast', opts),
     getViewers:       (opts)    => ipcRenderer.invoke('youtube:getViewers', opts)
   },
+  chat: {
+    openPopout:     ()   => ipcRenderer.invoke('chat:openPopout'),
+    closePopout:    ()   => ipcRenderer.invoke('chat:closePopout'),
+    onPopoutClosed: (cb) => ipcRenderer.on('chat:popoutClosed', () => cb())
+  },
   facebook: {
     auth:            (appId, appSecret, configId) => ipcRenderer.invoke('facebook:auth', appId, appSecret, configId),
     goLive:           (opts)            => ipcRenderer.invoke('facebook:goLive', opts),

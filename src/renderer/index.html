@@ -147,7 +147,11 @@
                     <div class="chat-send-bar">
                       <input id="chat-msg-input" class="chat-msg-input" type="text" placeholder="Send to chat…" />
                       <button id="btn-send-both" class="btn-secondary">Send Both</button>
+                      <button id="btn-popout-chats" class="btn-ghost" title="Pop out chats">⧉</button>
                       <span id="chat-send-status" class="muted"></span>
+                    </div>
+                    <div id="chat-popped-note" class="muted" style="display:none; padding: 12px 0">
+                      Chats popped out — <button id="btn-restore-chats" class="btn-ghost">Restore</button>
                     </div>
                     <div class="chat-cols-row">
                       <div class="chat-col">
