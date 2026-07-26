@@ -110,10 +110,10 @@ async function fetchTopic(sessionPath, topic) {
   }
 }
 
-async function loadSession(sessionPath, driverMapping = {}) {
+async function loadSession(sessionPath, driverMapping = {}, forceRefresh = false) {
   let timeline;
 
-  if (isCached(sessionPath)) {
+  if (!forceRefresh && isCached(sessionPath)) {
     console.log(`  [cache] Loading from cache: ${sessionPath}`);
     timeline = readCache(sessionPath);
   } else {

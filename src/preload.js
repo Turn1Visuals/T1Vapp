@@ -137,7 +137,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   f1: {
     sessions:       (year)      => ipcRenderer.invoke('f1:sessions', year),
-    load:           (path)      => ipcRenderer.invoke('f1:load', path),
+    load:           (path, forceRefresh) => ipcRenderer.invoke('f1:load', path, forceRefresh),
     play:           (speed)     => ipcRenderer.invoke('f1:play', speed),
     pause:          ()          => ipcRenderer.invoke('f1:pause'),
     seek:           (offsetMs)  => ipcRenderer.invoke('f1:seek', offsetMs),

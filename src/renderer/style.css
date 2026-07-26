@@ -1853,6 +1853,8 @@ html, body {
 .lt-session-item:hover { background: #1e1e1e; }
 .lt-session-item.active { background: #1e1e1e; border-left-color: #e10600; color: #fff; }
 .lt-session-item.cached::after { content: '●'; font-size: 8px; color: #4caf50; margin-left: 6px; vertical-align: middle; }
+.lt-session-refresh { float: right; font-size: 13px; color: #666; padding: 0 4px; border-radius: 3px; }
+.lt-session-refresh:hover { color: #f0f0f0; background: #333; }
 
 /* Main */
 .lt-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px; gap: 12px; }

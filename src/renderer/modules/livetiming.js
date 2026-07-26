@@ -171,7 +171,23 @@ export function initLiveTiming() {
         for (const item of items) {
           const el = document.createElement('div')
           el.className = 'lt-session-item' + (item.cached ? ' cached' : '')
-          el.textContent = item.session
+
+          const label = document.createElement('span')
+          label.textContent = item.session
+          el.appendChild(label)
+
+          if (item.cached) {
+            const refreshBtn = document.createElement('span')
+            refreshBtn.className = 'lt-session-refresh'
+            refreshBtn.textContent = '↻'
+            refreshBtn.title = 'Re-download session data'
+            refreshBtn.addEventListener('click', (e) => {
+              e.stopPropagation()
+              loadSession(item, el, true)
+            })
+            el.appendChild(refreshBtn)
+          }
+
           el.addEventListener('click', () => loadSession(item, el))
           group.appendChild(el)
           if (activePath && item.path === activePath) {
@@ -192,15 +208,15 @@ export function initLiveTiming() {
 
   yearLoadBtn.addEventListener('click', () => loadSessionList(yearSelect.value))
 
-  async function loadSession(item, el) {
+  async function loadSession(item, el, forceRefresh = false) {
     if (activeItem) activeItem.classList.remove('active')
     activeItem = el
     el.classList.add('active')
     liveMode = false
-    setStatus(`Loading ${item.session}…`)
+    setStatus(forceRefresh ? `Re-downloading ${item.session}…` : `Loading ${item.session}…`)
     liveBtn.textContent = 'Connect Live'
     try {
-      const res = await window.api.f1.load(item.path)
+      const res = await window.api.f1.load(item.path, forceRefresh)
       if (!res.ok) throw new Error(res.error)
       duration = res.duration
       durationLabel.textContent = fmtMs(duration)

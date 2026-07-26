@@ -2544,11 +2544,11 @@ ipcMain.handle('f1:sessions', async (_, year) => {
   )
 })
 
-ipcMain.handle('f1:load', async (_, sessionPath) => {
+ipcMain.handle('f1:load', async (_, sessionPath, forceRefresh = false) => {
   // Disconnect live feed first so it doesn't override playback
   if (f1LiveFeed) { f1LiveFeed.disconnect(); f1LiveFeed = null; f1LiveConnected = false }
   const driverMapping = loadDriverMapping()
-  const { timeline, streamStartUnix } = await loadSession(sessionPath, driverMapping)
+  const { timeline, streamStartUnix } = await loadSession(sessionPath, driverMapping, forceRefresh)
   f1Playback   = new Playback(timeline, streamStartUnix)
   f1LoadedPath = sessionPath
   f1SaveState()
