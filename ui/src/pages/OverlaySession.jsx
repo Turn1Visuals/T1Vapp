@@ -8,6 +8,7 @@ import RaceControlWidget from '../overlay/components/RaceControlWidget.jsx';
 import PracticeWidget from '../overlay/components/PracticeWidget.jsx';
 import QualifyingLapWidget from '../overlay/components/QualifyingLapWidget.jsx';
 import PitLaneWidget from '../overlay/components/PitLaneWidget.jsx';
+import DriverStandingsWidget from '../overlay/components/DriverStandingsWidget.jsx';
 import BattleWidget from '../overlay/components/BattleWidget.jsx';
 import { AudioProvider, useEnqueueAudio } from '../overlay/components/AudioWidget.jsx';
 import Commentator from '../overlay/components/Commentator.jsx';
@@ -17,6 +18,7 @@ import { useSchedule, findNextSession, buildFallbackState } from '../overlay/use
 import '../overlay/overlay.css';
 
 const debug = new URLSearchParams(window.location.search).has('debug');
+const showStandings = new URLSearchParams(window.location.search).get('standings') !== '0';
 
 function useCircuitKey(state) {
   const [etKey, setEtKey] = React.useState(null);
@@ -306,9 +308,18 @@ function OverlayContent() {
           {/* Col 3 — race control + commentator (400px fixed) */}
           <div style={{ flexShrink: 0, width: 250, display: 'flex', flexDirection: 'column', overflow: 'hidden', outline: debug ? '1px solid #4499ff' : 'none', position: 'relative' }}>
 
+            {/* Driver standings (content-sized) */}
+            {showStandings && (
+              <div style={{ flexShrink: 0, padding: '12px 12px 0', outline: debug ? '1px solid #4499ff' : 'none' }}>
+                <DriverStandingsWidget state={state} />
+              </div>
+            )}
+
             {/* Race control (fills) */}
-            <div style={{ flex: 1, padding: 12, overflow: 'hidden auto', outline: debug ? '1px solid #4499ff' : 'none' }}>
-              <RaceControlWidget state={state} />
+            <div style={{ flex: 1, padding: 12, outline: debug ? '1px solid #4499ff' : 'none', minHeight: 0 }}>
+              <div style={{ height: '100%', overflow: 'hidden' }}>
+                <RaceControlWidget state={state} />
+              </div>
             </div>
 
             {/* Commentator (bottom-right) */}
