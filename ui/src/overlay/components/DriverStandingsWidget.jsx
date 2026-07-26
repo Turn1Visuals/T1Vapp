@@ -1,67 +1,37 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import TEAM_STYLES from '../../teamStyles';
-
-const STANDINGS_URL = 'https://api.jolpi.ca/ergast/f1/2026/driverStandings.json';
 
 // Change this to cap the table (e.g. 10 for points-scoring positions only).
 // null = show the full grid.
 const MAX_ROWS = null;
 
-const RACE_POINTS   = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
-const SPRINT_POINTS = [8, 7, 6, 5, 4, 3, 2, 1];
-
-async function fetchBaselineStandings() {
-  const data = await fetch(STANDINGS_URL).then(r => r.json());
-  const list = data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings ?? [];
-  const map = {};
-  for (const d of list) {
-    const code = d.Driver?.code;
-    if (code) map[code] = { points: Number(d.points) || 0, pos: Number(d.position) || null };
-  }
-  return map;
-}
-
 export default function DriverStandingsWidget({ state }) {
-  const [baseline, setBaseline] = useState(null);
+  const sessionEvent = state?.SessionInfo?.SessionEvent ?? null;
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchBaselineStandings().then(map => { if (!cancelled) setBaseline(map); }).catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  const si          = state?.SessionInfo ?? null;
-  const sessionEvent = si?.SessionEvent ?? null;
-  const isSprint      = sessionEvent === 'race' && si?.Name === 'Sprint';
-  const pointsTable    = isSprint ? SPRINT_POINTS : RACE_POINTS;
-
-  const timingLines = state?.TimingData?.Lines ?? {};
+  const predictions = state?.ChampionshipPrediction?.Drivers ?? {};
   const driverList  = state?.DriverList ?? {};
 
   const rows = useMemo(() => {
-    if (!baseline) return [];
-    const list = Object.keys(driverList).map(num => {
+    const list = Object.keys(predictions).map(num => {
+      const pred   = predictions[num];
       const driver = driverList[num];
-      const tla    = driver?.Tla ?? driver?.Abbr ?? num;
-      const pos    = parseInt(timingLines[num]?.Position, 10);
-      const sessionPoints  = Number.isFinite(pos) && pos >= 1 ? (pointsTable[pos - 1] ?? 0) : 0;
-      const baselinePoints = baseline[tla]?.points ?? 0;
       return {
-        tla,
+        num,
+        tla: driver?.Tla ?? driver?.Abbr ?? num,
         team: driver?.TeamName ?? null,
-        actualPos: baseline[tla]?.pos ?? null,
-        current: baselinePoints,
-        sessionPoints,
-        predicted: baselinePoints + sessionPoints,
+        actualPos: pred?.CurrentPosition ?? null,
+        pos: pred?.PredictedPosition ?? null,
+        current: pred?.CurrentPoints ?? 0,
+        predicted: pred?.PredictedPoints ?? 0,
       };
-    });
-    list.sort((a, b) => b.predicted - a.predicted);
-    return list.map((row, i) => {
-      const pos = i + 1;
-      const delta = row.actualPos != null ? row.actualPos - pos : null;
-      return { ...row, pos, delta };
-    });
-  }, [baseline, driverList, timingLines, pointsTable]);
+    }).filter(row => row.pos != null);
+    list.sort((a, b) => a.pos - b.pos);
+    return list.map(row => ({
+      ...row,
+      sessionPoints: row.predicted - row.current,
+      delta: row.actualPos != null ? row.actualPos - row.pos : null,
+    }));
+  }, [predictions, driverList]);
 
   const visibleRows = MAX_ROWS != null ? rows.slice(0, MAX_ROWS) : rows;
 

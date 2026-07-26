@@ -73,6 +73,7 @@ const TOPICS = [
   'WeatherData',
   'Position.z',
   'CarData.z',
+  'ChampionshipPrediction',
 ];
 
 function deepMerge(target, source) {

@@ -2493,6 +2493,7 @@ function statePayload(snap) {
     LapCount:            s['LapCount']              ?? null,
     WeatherData:         s['WeatherData']           ?? null,
     CarData:             s['CarData.z']             ?? null,
+    ChampionshipPrediction: s['ChampionshipPrediction'] ?? null,
     BestLapSectors:      snap.bestLapSectors        ?? {},
     SessionPart:         snap.sessionPart           ?? null,
   }
