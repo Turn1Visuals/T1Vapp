@@ -11,7 +11,7 @@ const TOPICS = [
   'Heartbeat','AudioStreams','DriverList','ExtrapolatedClock','RaceControlMessages',
   'SessionInfo','SessionStatus','TeamRadio','TimingAppData','TimingStats','TrackStatus',
   'WeatherData','Position.z','CarData.z','ContentStreams','SessionData','TimingData',
-  'TopThree','RcmSeries','LapCount',
+  'TopThree','RcmSeries','LapCount','ChampionshipPrediction',
 ];
 
 class LiveFeed extends EventEmitter {
